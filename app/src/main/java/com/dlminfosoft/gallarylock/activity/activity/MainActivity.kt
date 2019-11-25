@@ -38,6 +38,9 @@ import android.widget.Button
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dlminfosoft.gallarylock.activity.dialog.DialogFolderSelection
 import kotlinx.android.synthetic.main.dialog_radio_btn.*
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 
 class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
@@ -210,6 +213,9 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     }
 
     private fun moveFile(inputPath: String, inputFile: String, outputPath: String) {
+
+
+       var path:Path =Files.move(Paths.get(inputFile),Paths.get(outputPath + inputFile + ".hide"))
         var `in`: InputStream? = null
         var out: OutputStream? = null
         try {
