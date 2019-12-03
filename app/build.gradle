@@ -6,10 +6,10 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.1"
+    buildToolsVersion "29.0.2"
     defaultConfig {
-        applicationId "com.dlminfosoft.gallarylock"
-        minSdkVersion 15
+        applicationId "com.gallarylock"
+        minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -44,9 +44,13 @@ dependencies {
         // androidx.appcompat as a dependency in your app.
         exclude group: 'androidx.appcompat', module: 'appcompat'
     }
+    implementation project(':mediapicker')
     implementation 'com.github.bumptech.glide:glide:3.8.0'
     implementation 'com.github.esafirm.android-image-picker:imagepicker:1.7.5'
     implementation 'com.jakewharton:butterknife:8.4.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
     implementation 'com.ms-square:etsyblur:0.2.1'
-}
+    implementation 'com.ablanco.zoomy:zoomy:1.1.0'
+   /* implementation 'per.freesky1102.mediapicker:mediapicker:1.0.0'*/
+  /*  implementation 'net.alhazmy13.MediaPicker:libary:2.4.4'*/
+    }

@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':mediapicker'
 rootProject.name='GallaryLock'
