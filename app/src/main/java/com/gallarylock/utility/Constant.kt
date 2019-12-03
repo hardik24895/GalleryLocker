@@ -4,6 +4,8 @@ object Constant {
     const val PIN = "pin"
     const val EMAIL = "id"
     const val DATA = "data"
+    const val IMAGE = "image"
+    const val VIDEO = "video"
 
     const val ERROR = "error"
     const val UNAUTHORIZED = "unauthorized"

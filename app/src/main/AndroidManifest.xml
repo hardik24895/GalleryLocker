@@ -41,6 +41,9 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait">
         </activity>
+        <activity android:name=".activity.FullscreenImageActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"/>
         <activity
             android:name="vn.tungdx.mediapicker.activities.MediaPickerActivity"
             android:theme="@style/MediaPickerTheme" />

@@ -1,3 +1,3 @@
 package com.gallarylock.modal
 
-data class FolderListModal(val name: String, val totalItem: Int)
+data class FolderListModal(val id:String,val name: String, val totalItem: String)

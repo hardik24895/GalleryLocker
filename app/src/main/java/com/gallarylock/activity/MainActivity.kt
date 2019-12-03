@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Environment.getExternalStorageDirectory
 import android.util.Log
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -29,17 +30,28 @@ import com.gallarylock.utility.Constant.APPLICATON_FOLDER_NAME
 import com.esafirm.imagepicker.features.ImagePicker
 import com.esafirm.imagepicker.model.Image
 import com.gallarylock.R
+import com.gallarylock.Utility
+import com.gallarylock.database.FileDBHelper
+import com.gallarylock.database.FolderDBHelper
+import com.gallarylock.modal.FileListModal
+import com.gallarylock.utility.Constant
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar.*
 import vn.tungdx.mediapicker.MediaOptions
 import vn.tungdx.mediapicker.activities.MediaPickerActivity
 import java.io.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
 
     private var adapter: FolderListAdapter? = null
+
+    lateinit var folderDBHelper: FolderDBHelper
+
+    lateinit var fileDBHelper: FileDBHelper
 
     companion object {
         //image pick code
@@ -57,11 +69,13 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     }
 
     var isFABOpen: Boolean = false
-    val folderlist = ArrayList<FolderListModal>()
+    var folderlist = ArrayList<FolderListModal>()
     private val images = java.util.ArrayList<Image>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        folderDBHelper = FolderDBHelper(this)
+        fileDBHelper = FileDBHelper(this)
         setContentView(R.layout.activity_main)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -84,7 +98,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             }
         }
 
-        fab1.setOnClickListener{
+        fab1.setOnClickListener {
             val builder = MediaOptions.Builder()
             var options: MediaOptions? = null
             options = builder.selectVideo().canSelectMultiVideo(false).build()
@@ -94,20 +108,21 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 options
             )
 
-                closeFABMenu()}
+            closeFABMenu()
+        }
 
         fab2.setOnClickListener {
 
-           /*ImagePicker.Builder(this)
-                        .mode(ImagePicker.Mode.CAMERA_AND_GALLERY)
-                        .compressLevel(ImagePicker.ComperesLevel.MEDIUM)
-                        .directory(ImagePicker.Directory.DEFAULT)
-                        .extension(ImagePicker.Extension.PNG)
-                        .scale(600, 600)
-                        .allowMultipleImages(false)
-                        .enableDebuggingMode(true)
-                        .build();
-*/
+            /*ImagePicker.Builder(this)
+                         .mode(ImagePicker.Mode.CAMERA_AND_GALLERY)
+                         .compressLevel(ImagePicker.ComperesLevel.MEDIUM)
+                         .directory(ImagePicker.Directory.DEFAULT)
+                         .extension(ImagePicker.Extension.PNG)
+                         .scale(600, 600)
+                         .allowMultipleImages(false)
+                         .enableDebuggingMode(true)
+                         .build();
+ */
             pickImageFromGallery()
             closeFABMenu()
         }
@@ -120,12 +135,12 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     override fun onItemSelect(position: Int, data: FolderListModal) {
 
         val intent = Intent(this, FolderDetailActivity::class.java)
-        intent.putExtra("name", data.name)
+        intent.putExtra(Constant.DATA, data.name)
         startActivity(intent)
         // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun onOptionItemSelect(position: Int, data: FolderListModal, imgOption:View) {
+    override fun onOptionItemSelect(position: Int, data: FolderListModal, imgOption: View) {
         var popup: PopupMenu? = null;
         popup = PopupMenu(this, imgOption)
         popup.inflate(R.menu.poup_home)
@@ -134,13 +149,30 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
             when (item!!.itemId) {
                 R.id.delete -> {
-                    Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
+
+                    val result = folderDBHelper.deleteFolder(data.id)
+                    if(result){
+                        val folderDirectory = File(
+                            getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
+                            data.name
+                        )
+                       if( EncriptDycript.deleteFiles(folderDirectory.absolutePath)){
+                           Toast.makeText(this@MainActivity, "Yes", Toast.LENGTH_SHORT).show();
+                       }else{
+                           Toast.makeText(this@MainActivity, "No", Toast.LENGTH_SHORT).show();
+                       }
+                    }
+
+                    Log.d("deleted===", result.toString())
+                    getListOfFolder()
+                    //Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
                 }
                 R.id.rename -> {
-                    Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
+                    renameFolder(data)
+                   // Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
                 }
                 R.id.unhide -> {
-                    Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -153,18 +185,21 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     private fun setupRecyclerView() {
         val layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
-        adapter = FolderListAdapter(folderlist, this, this)
+        adapter = FolderListAdapter(folderlist, this, this, fileDBHelper)
         recyclerView.adapter = adapter
     }
 
     private fun getListOfFolder() {
-        val f = File(getExternalStorageDirectory(), APPLICATON_FOLDER_NAME)
-        val files = f.listFiles()
-        for (inFile in files!!) {
-            if (inFile.isDirectory()) {
-                folderlist.add(FolderListModal(inFile.name, 0))
-            }
-        }
+        //val f = File(getExternalStorageDirectory(), APPLICATON_FOLDER_NAME)
+        //val files = f.listFiles()
+        folderlist = folderDBHelper.getAllFOlder()
+        adapter?.notifyDataSetChanged()
+
+        /* for (inFile in files!!) {
+             if (inFile.isDirectory()) {
+                 folderlist.add(FolderListModal(inFile.name, 0))
+             }
+         }*/
         setupRecyclerView()
     }
 
@@ -173,11 +208,19 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         if (!parentDirectory.exists()) {
             parentDirectory.mkdirs()
             val folderDirectory = File(
-                getExternalStorageDirectory().getAbsolutePath() + "/" +APPLICATON_FOLDER_NAME,
+                getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
                 "New Folder"
             )
             if (!folderDirectory.exists()) {
                 folderDirectory.mkdirs()
+                val result = folderDBHelper.insertFolder(
+                    FolderListModal(
+                        UUID.randomUUID().toString(),
+                        "New Folder",
+                        "0"
+                    )
+                )
+                Log.d("newfolder add=====", result.toString())
                 getListOfFolder()
             }
         } else {
@@ -232,12 +275,21 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             folderDirectory.mkdirs()
             folderlist.clear()
             adapter?.notifyDataSetChanged()
+            val result = folderDBHelper.insertFolder(
+                FolderListModal(
+                    UUID.randomUUID().toString(),
+                    name,
+                    "0"
+                )
+            )
             getListOfFolder()
+            Log.d("inserted=====", result.toString())
         } else {
             showToast("Already exist")
         }
 
     }
+
 
     private fun pickImageFromGallery() {
         ImagePicker.create(this)
@@ -256,31 +308,31 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     }
 
-    private fun getFilePath(path: String) {
-        showRadioButtonDialog(path)
+    private fun getFilePath(path: String , type:String) {
+        showRadioButtonDialog(path, type)
 
     }
 
-    private fun moveFile(inputPath: String, inputFile: String, outputPath: String) {
-      /*  if( File(inputPath).renameTo(File(outputPath + inputFile + ".hide")))
-        {
-            File(inputPath).delete()
+    private fun moveFile(originalpath: String, inputFile: String, newpath: String, folderName:String, type:String) {
+        /*  if( File(inputPath).renameTo(File(outputPath + inputFile + ".hide")))
+          {
+              File(inputPath).delete()
 
-            adapter?.notifyDataSetChanged()
-        }else{
-            Log.e("notMoved", "error")
-        }*/
-     //  var path: Path = Files.move(Paths.get(inputFile),Paths.get(outputPath + inputFile + ".hide"))
+              adapter?.notifyDataSetChanged()
+          }else{
+              Log.e("notMoved", "error")
+          }*/
+        //  var path: Path = Files.move(Paths.get(inputFile),Paths.get(outputPath + inputFile + ".hide"))
         var `in`: InputStream? = null
         var out: OutputStream? = null
         try {
             //create output directory if it doesn't exist
-            val dir = File(outputPath)
+            val dir = File(originalpath)
             if (!dir.exists()) {
                 dir.mkdirs()
             }
-            `in` = FileInputStream(inputPath)
-            out = FileOutputStream(outputPath + inputFile)
+            `in` = FileInputStream(originalpath)
+            out = FileOutputStream(newpath + inputFile)
             val buffer = ByteArray(1024)
             val read: Int
             var length = `in`.read(buffer)
@@ -297,13 +349,14 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             out.close()
             out = null
             adapter?.notifyDataSetChanged()
-
-            if(EncriptDycript.delete(this,File(inputPath)))
-            {
+            val size= Utility.calculateSize(File(originalpath).length().toInt()/1024)
+            val result = fileDBHelper.insertFile(FileListModal( UUID.randomUUID().toString(), inputFile,size,originalpath,newpath+inputFile,folderName,type))
+            if (result)  Log.d("file add===", "yes")
+            if (EncriptDycript.delete(this, File(originalpath))) {
                 Log.d("delete", "yes")
             }
             // delete the original file
-          //  File(inputPath).delete()
+            //  File(inputPath).delete()
         } catch (fnfe1: FileNotFoundException) {
             Log.e("tag", "error")
         } catch (e: Exception) {
@@ -325,18 +378,18 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 sb.append(images[i].path)
                 i++
             }
-            getFilePath(sb.trim().toString())
+            getFilePath(sb.trim().toString(), Constant.IMAGE)
 
 
         }
         if (requestCode == VIDEO_PICK_CODE) {
-            if( MediaPickerActivity.getMediaItemSelected(data)!=null){
+            if (MediaPickerActivity.getMediaItemSelected(data) != null) {
                 val chosenVideo =
                     MediaPickerActivity.getMediaItemSelected(data).get(0)
                 val f = File(chosenVideo.getPathOrigin(this))
                 if (f.exists()) {
-                    Log.d("original_Path=====",f.absolutePath)
-                    getFilePath(f.absolutePath)
+                    Log.d("original_Path=====", f.absolutePath)
+                    getFilePath(f.absolutePath,Constant.VIDEO)
                 } else {
                     Toast.makeText(
                         this,
@@ -347,26 +400,26 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             }
 
         }
-         /*if (requestCode == ImagePicker.IMAGE_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
-             val path= data?.getStringArrayListExtra(ImagePicker.EXTRA_IMAGE_PATH);
-             getFilePath(path?.get(0).toString())
-             //Your Code
-             Log.d("Image_path",path?.get(0).toString())
-        }
-
-        if (requestCode == VideoPicker.VIDEO_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
-        val path =  data?.getStringArrayListExtra(VideoPicker.EXTRA_VIDEO_PATH)
-         Log.d("Video_path",path?.get(0).toString())
+        /*if (requestCode == ImagePicker.IMAGE_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
+            val path= data?.getStringArrayListExtra(ImagePicker.EXTRA_IMAGE_PATH);
             getFilePath(path?.get(0).toString())
             //Your Code
-        }*/
-        if(resultCode == Activity.RESULT_OK && requestCode == PERMISSION_REQUEST_VIDEO){
-           /* val chosenVideo =
-                MediaPickerActivity.getMediaItemSelected(data)[0]
-            val f = File(chosenVideo.getPathOrigin(this))
-            if (f.exists()) {
-                getFilePath(f.absolutePath)
-            }*/
+            Log.d("Image_path",path?.get(0).toString())
+       }
+
+       if (requestCode == VideoPicker.VIDEO_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
+       val path =  data?.getStringArrayListExtra(VideoPicker.EXTRA_VIDEO_PATH)
+        Log.d("Video_path",path?.get(0).toString())
+           getFilePath(path?.get(0).toString())
+           //Your Code
+       }*/
+        if (resultCode == Activity.RESULT_OK && requestCode == PERMISSION_REQUEST_VIDEO) {
+            /* val chosenVideo =
+                 MediaPickerActivity.getMediaItemSelected(data)[0]
+             val f = File(chosenVideo.getPathOrigin(this))
+             if (f.exists()) {
+                 getFilePath(f.absolutePath)
+             }*/
         }
     }
 
@@ -419,18 +472,74 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         builder.show();
     }
 
-    private fun showRadioButtonDialog(path: String) {
+    fun renameFolder(folder: FolderListModal) {
+        val context = this
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle("Rename Folder")
+        val view = layoutInflater.inflate(R.layout.dialog_create_folder, null)
+
+        val categoryEditText = view.findViewById(R.id.categoryEditText) as EditText
+        categoryEditText.setText(folder.name)
+        builder.setView(view);
+
+        // set up the ok button
+        builder.setPositiveButton(android.R.string.ok) { dialog, p1 ->
+            val newCategory = categoryEditText.text
+            var isValid = true
+            if (newCategory.isBlank()) {
+                categoryEditText.error = getString(R.string.validation_empty)
+                isValid = false
+
+            }
+
+            if (isValid) {
+                // do something
+                for (inFile in folderlist) {
+                    if (!inFile.name.equals(newCategory)) {
+                        val result = folderDBHelper.renameFolder(
+                            FolderListModal(
+                                folder.id,
+                                newCategory.toString(),
+                                "0"
+                            )
+                        )
+                        val source = File(
+                            getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
+                            folder.name
+                        )
+                        val destination = File(
+                            getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
+                            newCategory.toString()
+                        )
+                        source.renameTo(destination)
+                        getListOfFolder()
+                        Log.d("rename===", result.toString())
+                    }
+                }
+
+            }
+
+        }
+
+        builder.setNegativeButton(android.R.string.cancel) { dialog, p1 ->
+            dialog.cancel()
+        }
+
+        builder.show();
+    }
+
+    private fun showRadioButtonDialog(originalpath: String, type:String) {
         val dialog = DialogFolderSelection
             .newInstance(
                 this,
                 folderlist,
                 object : DialogFolderSelection.OnItemClick {
                     override fun onItemCLicked(text: RadioButton) {
-                        var fileName: String = path.substring(path.lastIndexOf("/") + 1);
-                        val rootPath = Environment.getExternalStorageDirectory()
-                            .getAbsolutePath() + "/"+ APPLICATON_FOLDER_NAME+"/" + text.text + "/"
+                        var fileName: String = originalpath.substring(originalpath.lastIndexOf("/") + 1);
+                        val newpath = Environment.getExternalStorageDirectory()
+                            .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + text.text + "/"
                         //moveFile(path,fileName,rootPath)
-                        moveFile(path, fileName, rootPath)
+                        moveFile(originalpath, fileName, newpath,text.text.toString(),type)
                     }
                 })
         dialog.show(supportFragmentManager, "ok")

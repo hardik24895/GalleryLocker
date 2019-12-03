@@ -36,6 +36,21 @@ public class EncriptDycript {
         }
         return !file.exists();
     }
+    public static boolean  deleteFiles(String path) {
+
+        File file = new File(path);
+
+        if (file.exists()) {
+            String deleteCmd = "rm -r " + path;
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                runtime.exec(deleteCmd);
+            } catch (IOException e) {
+
+            }
+        }
+        return !file.exists();
+    }
     static FileOutputStream encrypt(String inputfile, String outputfile) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         // Here you read the cleartext.
         FileInputStream fis = new FileInputStream(inputfile);

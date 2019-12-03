@@ -12,6 +12,7 @@ import com.gallarylock.utility.Constant
 import kotlinx.android.synthetic.main.activity_enter_pin.*
 
 import kotlinx.android.synthetic.main.activity_enter_pin.txtOK
+import kotlinx.android.synthetic.main.toolbar_title.*
 
 
 class SetPinActivity : AppCompatActivity() {
@@ -20,6 +21,7 @@ class SetPinActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(this)
         setContentView(R.layout.activity_enter_pin)
+        txtTitle.text ="Set Pin"
         txtOK.setOnClickListener {
 
             validation()

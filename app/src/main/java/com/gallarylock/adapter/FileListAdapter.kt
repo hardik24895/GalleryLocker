@@ -36,13 +36,17 @@ class FileListAdapter (val folderList: ArrayList<FileListModal>, val context: Co
 
         fun bindItems(Folder: FileListModal, context:Context, listener: OnItemSelected) {
             val textViewName = itemView.findViewById(R.id.txtName) as TextView
+            val txtSize = itemView.findViewById(R.id.txtSize) as TextView
             val imageview = itemView.findViewById(R.id.imageView) as ImageView
+            val imgOption = itemView.findViewById(R.id.imgOption) as ImageView
             //  val textViewAddress  = itemView.findViewById(R.id.textViewAddress) as TextView
             textViewName.text = Folder.name
+            txtSize.text = "Size: " + Folder.size
             Glide.with(context)
-                .load(Folder.path)
+                .load(Folder.newpath)
                 .into(imageview)
             //  textViewAddress.text = user.address
+            imgOption.setOnClickListener {listener.onOptionItemSelect(adapterPosition,Folder,imgOption)  }
             itemView.setOnClickListener { listener.onItemSelect(adapterPosition,Folder) }
         }
     }

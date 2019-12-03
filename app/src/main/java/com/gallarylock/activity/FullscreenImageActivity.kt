@@ -1,10 +1,12 @@
 package com.gallarylock.activity
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.ablanco.zoomy.Zoomy
 import com.bumptech.glide.Glide
 import com.gallarylock.R
 import com.gallarylock.utility.Constant
@@ -14,6 +16,7 @@ import kotlinx.android.synthetic.main.activity_fullscreen_image.*
 class FullscreenImageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fullscreen_image)
         hideNavigationBar()
 
@@ -22,7 +25,8 @@ class FullscreenImageActivity : AppCompatActivity() {
             .load(uri)
             .into(ivBackground)
         imgClose.setOnClickListener { finish() }
-
+        val builder = Zoomy.Builder(this).target(ivBackground)
+        builder.register()
     }
 
 
