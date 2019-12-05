@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GallaryLock</string>
+    <string name="app_name">Gallery Lock</string>
     <string name="action_settings">Settings</string>
     <string name="pin_content_desc">PIN input field</string>
     <string name="pin_label_text">PIN</string>

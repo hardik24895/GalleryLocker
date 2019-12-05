@@ -112,17 +112,6 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         }
 
         fab2.setOnClickListener {
-
-            /*ImagePicker.Builder(this)
-                         .mode(ImagePicker.Mode.CAMERA_AND_GALLERY)
-                         .compressLevel(ImagePicker.ComperesLevel.MEDIUM)
-                         .directory(ImagePicker.Directory.DEFAULT)
-                         .extension(ImagePicker.Extension.PNG)
-                         .scale(600, 600)
-                         .allowMultipleImages(false)
-                         .enableDebuggingMode(true)
-                         .build();
- */
             pickImageFromGallery()
             closeFABMenu()
         }
@@ -151,16 +140,25 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 R.id.delete -> {
 
                     val result = folderDBHelper.deleteFolder(data.id)
-                    if(result){
+                    if (result) {
                         val folderDirectory = File(
                             getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
                             data.name
                         )
-                       if( EncriptDycript.deleteFiles(folderDirectory.absolutePath)){
-                           Toast.makeText(this@MainActivity, "Yes", Toast.LENGTH_SHORT).show();
-                       }else{
-                           Toast.makeText(this@MainActivity, "No", Toast.LENGTH_SHORT).show();
-                       }
+
+                        if (folderDirectory.exists()) {
+                            if (folderDirectory.delete()) {
+                                Toast.makeText(this@MainActivity, "Yes", Toast.LENGTH_SHORT).show();
+                                System.out.println("file Deleted :" + folderDirectory.getPath());
+                            } else {
+                                System.out.println("file not Deleted :" + folderDirectory.getPath());
+                            }
+                        }
+                       /* if (EncriptDycript.deleteFiles(folderDirectory.absolutePath)) {
+                            Toast.makeText(this@MainActivity, "Yes", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this@MainActivity, "No", Toast.LENGTH_SHORT).show();
+                        }*/
                     }
 
                     Log.d("deleted===", result.toString())
@@ -169,11 +167,9 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 }
                 R.id.rename -> {
                     renameFolder(data)
-                   // Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
                 }
-                R.id.unhide -> {
-                   // Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
-                }
+
             }
 
             true
@@ -308,12 +304,18 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     }
 
-    private fun getFilePath(path: String , type:String) {
+    private fun getFilePath(path: String, type: String) {
         showRadioButtonDialog(path, type)
 
     }
 
-    private fun moveFile(originalpath: String, inputFile: String, newpath: String, folderName:String, type:String) {
+    private fun moveFile(
+        originalpath: String,
+        inputFile: String,
+        newpath: String,
+        folderName: String,
+        type: String
+    ) {
         /*  if( File(inputPath).renameTo(File(outputPath + inputFile + ".hide")))
           {
               File(inputPath).delete()
@@ -349,9 +351,19 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             out.close()
             out = null
             adapter?.notifyDataSetChanged()
-            val size= Utility.calculateSize(File(originalpath).length().toInt()/1024)
-            val result = fileDBHelper.insertFile(FileListModal( UUID.randomUUID().toString(), inputFile,size,originalpath,newpath+inputFile,folderName,type))
-            if (result)  Log.d("file add===", "yes")
+            val size = Utility.calculateSize(File(originalpath).length().toInt() / 1024)
+            val result = fileDBHelper.insertFile(
+                FileListModal(
+                    UUID.randomUUID().toString(),
+                    inputFile,
+                    size,
+                    originalpath,
+                    newpath + inputFile,
+                    folderName,
+                    type
+                )
+            )
+            if (result) Log.d("file add===", "yes")
             if (EncriptDycript.delete(this, File(originalpath))) {
                 Log.d("delete", "yes")
             }
@@ -389,7 +401,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 val f = File(chosenVideo.getPathOrigin(this))
                 if (f.exists()) {
                     Log.d("original_Path=====", f.absolutePath)
-                    getFilePath(f.absolutePath,Constant.VIDEO)
+                    getFilePath(f.absolutePath, Constant.VIDEO)
                 } else {
                     Toast.makeText(
                         this,
@@ -528,22 +540,27 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         builder.show();
     }
 
-    private fun showRadioButtonDialog(originalpath: String, type:String) {
+    private fun showRadioButtonDialog(originalpath: String, type: String) {
         val dialog = DialogFolderSelection
             .newInstance(
                 this,
                 folderlist,
                 object : DialogFolderSelection.OnItemClick {
                     override fun onItemCLicked(text: RadioButton) {
-                        var fileName: String = originalpath.substring(originalpath.lastIndexOf("/") + 1);
+                        var fileName: String =
+                            originalpath.substring(originalpath.lastIndexOf("/") + 1);
                         val newpath = Environment.getExternalStorageDirectory()
                             .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + text.text + "/"
                         //moveFile(path,fileName,rootPath)
-                        moveFile(originalpath, fileName, newpath,text.text.toString(),type)
+                        moveFile(originalpath, fileName, newpath, text.text.toString(), type)
                     }
                 })
         dialog.show(supportFragmentManager, "ok")
     }
 
 
+    override fun onResume() {
+        super.onResume()
+        getListOfFolder()
+    }
 }

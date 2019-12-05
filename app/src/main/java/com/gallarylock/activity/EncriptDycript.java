@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -26,6 +27,9 @@ public class EncriptDycript {
                 file.getAbsolutePath()
         };
         final ContentResolver contentResolver = context.getContentResolver();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            String volumename = MediaStore.getVolumeName(Uri.fromFile(file));
+        }
         final Uri filesUri = MediaStore.Files.getContentUri("external");
 
         contentResolver.delete(filesUri, where, selectionArgs);

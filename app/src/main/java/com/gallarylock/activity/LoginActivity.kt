@@ -9,6 +9,7 @@ import com.gallarylock.R
 import com.gallarylock.SessionManager
 import com.gallarylock.utility.Constant
 import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.toolbar_title.*
 
 class LoginActivity : AppCompatActivity() {
     lateinit var session: SessionManager
@@ -16,6 +17,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         session = SessionManager(this)
         setContentView(R.layout.activity_login)
+        txtTitle.text ="Login"
         txtOK.setOnClickListener {  validation() }
     }
     private  fun validation(){

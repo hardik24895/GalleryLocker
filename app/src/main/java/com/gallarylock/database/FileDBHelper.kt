@@ -111,7 +111,25 @@ class FileDBHelper (context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
         }
         return users
     }*/
+  fun renameFile(file: FileListModal):Boolean{
+      val db = writableDatabase
 
+      // Create a new map of values, where column names are the keys
+      val values = ContentValues()
+      values.put(DBFiles.FileEntry.COLUMN_ID, file.id)
+      values.put(DBFiles.FileEntry.COLUMN_FOLDERNAME, file.foldername)
+      values.put(DBFiles.FileEntry.COLUMN_FILETYPE, file.filetype)
+      values.put(DBFiles.FileEntry.COLUMN_FILENAME, file.name)
+      values.put(DBFiles.FileEntry.COLUMN_SIZE, file.size)
+      values.put(DBFiles.FileEntry.COLUMN_ORIGINALPATH, file.originalpath)
+      values.put(DBFiles.FileEntry.COLUMN_NEWPATH, file.newpath)
+      val whereClause = "_id=?"
+      val whereArgs = arrayOf<String>(file.id)
+      // Insert the new row, returning the primary key value of the new row
+      val newRowId = db.update(DBFiles.FileEntry.TABLE_NAME,  values, whereClause,whereArgs)
+
+      return true
+  }
 
     fun getAllFiles(foldername:String): ArrayList<FileListModal> {
         val files = ArrayList<FileListModal>()

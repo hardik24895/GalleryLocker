@@ -8,8 +8,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.contestee.extention.invisible
+import com.contestee.extention.visible
 import com.gallarylock.R
 import com.gallarylock.modal.FileListModal
+import com.gallarylock.utility.Constant
 
 
 class FileListAdapter (val folderList: ArrayList<FileListModal>, val context: Context, private val listener: OnItemSelected) :
@@ -34,20 +37,23 @@ class FileListAdapter (val folderList: ArrayList<FileListModal>, val context: Co
     //the class is hodling the list view
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        fun bindItems(Folder: FileListModal, context:Context, listener: OnItemSelected) {
+        fun bindItems(file: FileListModal, context:Context, listener: OnItemSelected) {
             val textViewName = itemView.findViewById(R.id.txtName) as TextView
             val txtSize = itemView.findViewById(R.id.txtSize) as TextView
             val imageview = itemView.findViewById(R.id.imageView) as ImageView
+            val imgplay = itemView.findViewById(R.id.imgplay) as ImageView
             val imgOption = itemView.findViewById(R.id.imgOption) as ImageView
             //  val textViewAddress  = itemView.findViewById(R.id.textViewAddress) as TextView
-            textViewName.text = Folder.name
-            txtSize.text = "Size: " + Folder.size
+
+            if(file.filetype.equals(Constant.VIDEO))  imgplay.visible()
+            textViewName.text = file.name
+            txtSize.text = "Size: " + file.size
             Glide.with(context)
-                .load(Folder.newpath)
+                .load(file.newpath)
                 .into(imageview)
             //  textViewAddress.text = user.address
-            imgOption.setOnClickListener {listener.onOptionItemSelect(adapterPosition,Folder,imgOption)  }
-            itemView.setOnClickListener { listener.onItemSelect(adapterPosition,Folder) }
+            imgOption.setOnClickListener {listener.onOptionItemSelect(adapterPosition,file,imgOption)  }
+            itemView.setOnClickListener { listener.onItemSelect(adapterPosition,file) }
         }
     }
     interface OnItemSelected{

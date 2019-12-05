@@ -26,6 +26,10 @@ android {
         renderscriptTargetApi 25
         renderscriptSupportModeEnabled true
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -51,6 +55,9 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
     implementation 'com.ms-square:etsyblur:0.2.1'
     implementation 'com.ablanco.zoomy:zoomy:1.1.0'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.9.6'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.9.6'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.9.6'
    /* implementation 'per.freesky1102.mediapicker:mediapicker:1.0.0'*/
   /*  implementation 'net.alhazmy13.MediaPicker:libary:2.4.4'*/
     }

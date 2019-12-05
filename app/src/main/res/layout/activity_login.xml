@@ -2,10 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:orientation="vertical"
     android:id="@+id/root"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <include
         android:id="@+id/include"
@@ -15,53 +15,63 @@
         app:layout_constraintTop_toTopOf="parent"></include>
 
     <LinearLayout
-        android:layout_margin="20dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
         android:layout_gravity="center"
+        android:layout_margin="20dp"
+        android:gravity="center"
         android:orientation="vertical">
 
-        <androidx.appcompat.widget.AppCompatEditText
+
+        <com.google.android.material.textfield.TextInputLayout
+
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:id="@+id/edtpin"
+
             android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:layout_margin="5dp"
-            android:inputType="numberPassword"
-            android:maxLength="4"
-            android:hint="Enter Your Pin"
-            android:background="@drawable/edittext_back"
-            ></androidx.appcompat.widget.AppCompatEditText>
+            android:layout_marginTop="10dp"
+            android:hint="Enter Your Pin">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/edtpin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/edittext_back"
+                android:inputType="numberPassword"
+                android:maxLength="4"
+
+                android:padding="10dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <TextView
-            android:visibility="gone"
             android:id="@+id/txtPin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Wrong Pin"
-            android:textStyle="bold"
             android:padding="10dp"
+            android:text="Wrong Pin"
+            android:textColor="@android:color/holo_red_dark"
             android:textSize="17sp"
-            android:textColor="@android:color/holo_red_dark"></TextView>
-
+            android:textStyle="bold"
+            android:visibility="gone"></TextView>
 
 
         <TextView
             android:id="@+id/txtOK"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/btn_rounded"
+            android:gravity="center"
+            android:padding="10dp"
             android:text="OK"
             android:textColor="@color/white"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:background="@drawable/btn_rounded"
-            android:layout_marginTop="20dp"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"
-            android:padding="10dp"></TextView>
+            android:textStyle="bold"></TextView>
 
 
     </LinearLayout>

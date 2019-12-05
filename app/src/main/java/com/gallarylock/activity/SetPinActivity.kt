@@ -42,7 +42,7 @@ class SetPinActivity : AppCompatActivity() {
     private  fun validation(){
         var emailPattern : String = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+"
         if(editpin.isEmpty()|| editpin.getValue().length!=4){
-            root.showSnackBar("Please enter valid pin")
+            root.showSnackBar("Please enter minimum 4 digit pin")
         }else if(edtconfimpin.isEmpty()|| edtconfimpin.getValue()!=editpin.getValue()){
             root.showSnackBar("Pin Does Not Match")
         }else if(android.util.Patterns.EMAIL_ADDRESS.matcher(emailPattern).matches() && edtemail.getValue().length>0 )
