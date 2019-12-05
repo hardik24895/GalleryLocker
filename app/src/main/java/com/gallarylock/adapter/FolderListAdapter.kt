@@ -14,6 +14,8 @@ import com.gallarylock.database.FileDBHelper
 import com.gallarylock.modal.FolderListModal
 import com.gallarylock.utility.Constant.APPLICATON_FOLDER_NAME
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 class FolderListAdapter(
     val folderList: ArrayList<FolderListModal>, val context: Context,
@@ -92,4 +94,5 @@ class FolderListAdapter(
         fun onItemSelect(position: Int, data: FolderListModal)
         fun onOptionItemSelect(position: Int, data: FolderListModal, itemView: View)
     }
+
 }

@@ -22,7 +22,12 @@
         android:gravity="center"
         android:orientation="vertical">
 
-
+       <!-- <ImageView
+            android:layout_marginBottom="20dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@mipmap/ic_launcher"></ImageView>
+-->
         <com.google.android.material.textfield.TextInputLayout
 
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

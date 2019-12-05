@@ -3,6 +3,7 @@ package com.gallarylock.activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -14,6 +15,7 @@ import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.Toast
@@ -21,6 +23,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 import com.gallarylock.Utility.showToast
 import com.gallarylock.adapter.FolderListAdapter
@@ -138,32 +141,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
             when (item!!.itemId) {
                 R.id.delete -> {
-
-                    val result = folderDBHelper.deleteFolder(data.id)
-                    if (result) {
-                        val folderDirectory = File(
-                            getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
-                            data.name
-                        )
-
-                        if (folderDirectory.exists()) {
-                            if (folderDirectory.delete()) {
-                                Toast.makeText(this@MainActivity, "Yes", Toast.LENGTH_SHORT).show();
-                                System.out.println("file Deleted :" + folderDirectory.getPath());
-                            } else {
-                                System.out.println("file not Deleted :" + folderDirectory.getPath());
-                            }
-                        }
-                       /* if (EncriptDycript.deleteFiles(folderDirectory.absolutePath)) {
-                            Toast.makeText(this@MainActivity, "Yes", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(this@MainActivity, "No", Toast.LENGTH_SHORT).show();
-                        }*/
-                    }
-
-                    Log.d("deleted===", result.toString())
-                    getListOfFolder()
-                    //Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
+                    AskOption(data)
                 }
                 R.id.rename -> {
                     renameFolder(data)
@@ -183,6 +161,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         recyclerView.layoutManager = layoutManager
         adapter = FolderListAdapter(folderlist, this, this, fileDBHelper)
         recyclerView.adapter = adapter
+        runLayoutAnimation(recyclerView)
     }
 
     private fun getListOfFolder() {
@@ -220,6 +199,22 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 getListOfFolder()
             }
         } else {
+            val folderDirectory = File(
+                getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
+                "New Folder"
+            )
+            if (!folderDirectory.exists()) {
+                folderDirectory.mkdirs()
+                val result = folderDBHelper.insertFolder(
+                    FolderListModal(
+                        UUID.randomUUID().toString(),
+                        "New Folder",
+                        "0"
+                    )
+                )
+                Log.d("newfolder add=====", result.toString())
+                getListOfFolder()
+            }
             getListOfFolder()
         }
     }
@@ -562,5 +557,50 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     override fun onResume() {
         super.onResume()
         getListOfFolder()
+    }
+
+    private fun runLayoutAnimation(recyclerView: RecyclerView) {
+        val context = recyclerView.getContext()
+        val controller =
+            AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_fall_down)
+        recyclerView.setLayoutAnimation(controller)
+        recyclerView.getAdapter()?.notifyDataSetChanged()
+        recyclerView.scheduleLayoutAnimation()
+    }
+
+    private fun AskOption(file: FolderListModal) {
+        val myQuittingDialogBox = AlertDialog.Builder(this)
+            // set message, title, and icon
+            .setTitle("Delete")
+            .setMessage("Do you want to delete this folder?")
+            .setIcon(R.drawable.ic_delete_black_24dp)
+            .setPositiveButton("Delete", object : DialogInterface.OnClickListener {
+                override fun onClick(dialog: DialogInterface, whichButton: Int) {
+                    //your deleting code
+                    val result = folderDBHelper.deleteFolder(file.id)
+                    if (result) {
+                        val folderDirectory = File(
+                            getExternalStorageDirectory().getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME,
+                            file.name
+                        )
+
+                        if (folderDirectory.exists()) {
+                            folderDirectory.delete()
+                        }
+
+                    }
+
+
+                    getListOfFolder()
+                    dialog.dismiss()
+                }
+            })
+            .setNegativeButton("cancel", object : DialogInterface.OnClickListener {
+                override fun onClick(dialog: DialogInterface, which: Int) {
+                    dialog.dismiss()
+                }
+            })
+            .create()
+        myQuittingDialogBox.show()
     }
 }
