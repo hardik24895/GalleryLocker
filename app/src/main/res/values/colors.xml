@@ -22,4 +22,6 @@
     <color name="goldenRod">#efc30b</color>
     <color name="steel">#8d8d8f</color>
     <color name="trans">#00000000</color>
+    <color name="list_item_selected_state">#F4F6F6</color>
+    <color name="list_item_normal_state">#FFFFFF</color>
 </resources>

@@ -6,16 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.contestee.extention.invisible
-import com.contestee.extention.visible
 import com.gallarylock.R
+import com.gallarylock.activity.ImageEncryptDecrypt
 import com.gallarylock.modal.FileListModal
 import com.gallarylock.utility.Constant
+import java.io.File
 
 
-class FileListAdapter (val folderList: ArrayList<FileListModal>, val context: Context, private val listener: OnItemSelected) :
+class FileListAdapter (var folderList: ArrayList<FileListModal>, var folderSelectedList: ArrayList<FileListModal>, val context: Context, private val listener: OnItemSelected) :
     RecyclerView.Adapter<FileListAdapter.ViewHolder>() {
 
     //this method is returning the view for each item in the list
@@ -26,7 +28,7 @@ class FileListAdapter (val folderList: ArrayList<FileListModal>, val context: Co
 
     //this method is binding the data on the list
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bindItems(folderList[position],context,listener)
+        holder.bindItems(folderList[position],context,listener, folderList, folderSelectedList, position)
     }
 
     //this method is giving the size of the list
@@ -37,19 +39,41 @@ class FileListAdapter (val folderList: ArrayList<FileListModal>, val context: Co
     //the class is hodling the list view
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        fun bindItems(file: FileListModal, context:Context, listener: OnItemSelected) {
+        fun bindItems(
+            file: FileListModal,
+            context: Context,
+            listener: OnItemSelected,
+            folderList: ArrayList<FileListModal>,
+            folderSelectedList: ArrayList<FileListModal>,
+            position: Int
+        ) {
             val textViewName = itemView.findViewById(R.id.txtName) as TextView
             val txtSize = itemView.findViewById(R.id.txtSize) as TextView
             val imageview = itemView.findViewById(R.id.imageView) as ImageView
             val imgplay = itemView.findViewById(R.id.imgplay) as ImageView
             val imgOption = itemView.findViewById(R.id.imgOption) as ImageView
+            val  cardview = itemView.findViewById(R.id.cardview) as CardView
             //  val textViewAddress  = itemView.findViewById(R.id.textViewAddress) as TextView
 
-            if(file.filetype.equals(Constant.VIDEO))  imgplay.visible()
+           // if(file.filetype.equals(Constant.VIDEO))  imgplay.visible()
             textViewName.text = file.name
             txtSize.text = "Size: " + file.size
+            val encryptedData = File(file.newpath).readBytes()
+            val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+
+            if (folderSelectedList.contains(folderList.get(position)))
+                cardview.setBackgroundColor(ContextCompat.getColor(context, R.color.list_item_selected_state)
+            ) else
+                cardview.setBackgroundColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.list_item_normal_state
+                )
+            )
+
             Glide.with(context)
-                .load(file.newpath)
+                .load(decryptedData)
+                .asBitmap()
                 .into(imageview)
             //  textViewAddress.text = user.address
             imgOption.setOnClickListener {listener.onOptionItemSelect(adapterPosition,file,imgOption)  }

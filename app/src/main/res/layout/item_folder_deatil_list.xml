@@ -9,6 +9,7 @@
     android:orientation="vertical"
     app:cardCornerRadius="10dp"
     app:cardElevation="3dp"
+    android:id="@+id/cardview"
     app:cardUseCompatPadding="true">
 
     <FrameLayout

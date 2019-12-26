@@ -162,6 +162,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         adapter = FolderListAdapter(folderlist, this, this, fileDBHelper)
         recyclerView.adapter = adapter
         runLayoutAnimation(recyclerView)
+
     }
 
     private fun getListOfFolder() {
@@ -359,7 +360,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 )
             )
             if (result) Log.d("file add===", "yes")
-            if (EncriptDycript.delete(this, File(originalpath))) {
+            if (ImageEncryptDecrypt.delete(this, File(originalpath))) {
                 Log.d("delete", "yes")
             }
             // delete the original file

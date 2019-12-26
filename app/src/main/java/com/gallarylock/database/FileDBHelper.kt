@@ -7,10 +7,14 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
+import android.os.Environment
 import com.gallarylock.modal.FileListModal
+import java.io.File
+
 
 class FileDBHelper (context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     override fun onCreate(db: SQLiteDatabase) {
+
         db.execSQL(SQL_CREATE_ENTRIES)
     }
 

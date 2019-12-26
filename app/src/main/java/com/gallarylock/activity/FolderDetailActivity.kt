@@ -2,12 +2,17 @@ package com.gallarylock.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.ActionMode
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -19,34 +24,38 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.esafirm.imagepicker.features.ImagePicker
+import com.esafirm.imagepicker.model.Image
 import com.gallarylock.R
 import com.gallarylock.Utility
 import com.gallarylock.adapter.FileListAdapter
 import com.gallarylock.database.FileDBHelper
 import com.gallarylock.modal.FileListModal
-import com.gallarylock.modal.FolderListModal
+import com.gallarylock.utility.AlertDialogHelper
 import com.gallarylock.utility.Constant
 import com.gallarylock.utility.Constant.APPLICATON_FOLDER_NAME
+import com.gallarylock.utility.RecyclerItemClickListener
 import kotlinx.android.synthetic.main.activity_folder_detail.*
 import kotlinx.android.synthetic.main.toolbar_title.*
 import vn.tungdx.mediapicker.MediaOptions
 import vn.tungdx.mediapicker.activities.MediaPickerActivity
 import java.io.*
-import java.io.File.separatorChar
-import java.net.URI
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected {
+class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected , AlertDialogHelper.AlertDialogListener{
     private var adapter: FileListAdapter? = null
     private var selectedPath: String? = null
     var fileList = ArrayList<FileListModal>()
+    var SelectedFileList = ArrayList<FileListModal>()
     var folderName: String? = null
-    private val images = java.util.ArrayList<com.esafirm.imagepicker.model.Image>()
+    private var images = java.util.ArrayList<com.esafirm.imagepicker.model.Image>()
     lateinit var fileDBHelper: FileDBHelper
     var isFABOpen: Boolean = false
-
+    var mActionMode: ActionMode? = null
+    var context_menu: Menu? = null
+    var isMultiSelect = false
+    var alertDialogHelper: AlertDialogHelper? = null
     companion object {
         //image pick code
         private val IMAGE_PICK_CODE = 1000;
@@ -61,6 +70,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
         super.onCreate(savedInstanceState)
         fileDBHelper = FileDBHelper(this)
         setContentView(R.layout.activity_folder_detail)
+        alertDialogHelper = AlertDialogHelper(this)
         setupRecyclerView()
         folderName = intent.getStringExtra(Constant.DATA)
         setUpToolbarWithBackArrow(folderName, true)
@@ -129,15 +139,135 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
     private fun setupRecyclerView() {
         val layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
-        adapter = FileListAdapter(fileList, this, this)
+        adapter = FileListAdapter(fileList, SelectedFileList,this, this)
         recyclerView.adapter = adapter
         runLayoutAnimation(recyclerView)
+        recyclerView.addOnItemTouchListener(
+            RecyclerItemClickListener(
+                this,
+                recyclerView,
+                object : RecyclerItemClickListener.OnItemClickListener {
+                    override fun onItemClick(view: View?, position: Int) {
+                        if (isMultiSelect) multi_select(position) else Toast.makeText(
+                            applicationContext,
+                            "Details Page",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    override fun onItemLongClick(view: View?, position: Int) {
+                        if (!isMultiSelect) {
+                             SelectedFileList = ArrayList<FileListModal>()
+                            isMultiSelect = true
+                            if (mActionMode == null) {
+                                mActionMode = startActionMode(mActionModeCallback)
+                            }
+                        }
+                        multi_select(position)
+                    }
+                })
+        )
+
     }
 
+    fun multi_select(position: Int) {
+        if (mActionMode != null) {
+            if (SelectedFileList.contains(fileList.get(position))) SelectedFileList.remove(
+                fileList.get(position)
+            ) else SelectedFileList.add(fileList.get(position))
+            if (SelectedFileList.size > 0) mActionMode!!.title =
+                "" + SelectedFileList.size else mActionMode!!.title =
+                ""
+            refreshAdapter()
+        }
+    }
+
+    fun refreshAdapter() {
+        adapter?.folderSelectedList = SelectedFileList
+        adapter?.folderList = fileList
+        adapter?.notifyDataSetChanged()
+    }
+
+    private val mActionModeCallback: ActionMode.Callback =
+        object : ActionMode.Callback {
+            override fun onCreateActionMode(
+                mode: ActionMode,
+                menu: Menu
+            ): Boolean { // Inflate a menu resource providing context menu items
+                val inflater = mode.menuInflater
+                inflater.inflate(R.menu.menu_multi_select, menu)
+                context_menu = menu
+                return true
+            }
+
+            override fun onPrepareActionMode(
+                mode: ActionMode,
+                menu: Menu
+            ): Boolean {
+                return false // Return false if nothing is done
+            }
+
+            override fun onActionItemClicked(
+                mode: ActionMode,
+                item: MenuItem
+            ): Boolean {
+                return when (item.itemId) {
+                    R.id.action_delete -> {
+                        alertDialogHelper?.showAlertDialog(
+                            "",
+                            "Delete Contact",
+                            "DELETE",
+                            "CANCEL",
+                            1,
+                            false
+                        )
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            override fun onDestroyActionMode(mode: ActionMode) {
+                mActionMode = null
+                isMultiSelect = false
+                SelectedFileList =  ArrayList<FileListModal>()
+                refreshAdapter()
+            }
+        }
+
+    // AlertDialog Callback Functions
+    override fun onPositiveClick(from: Int) {
+        if (from == 1) {
+            if (SelectedFileList.size > 0) {
+                for (i in SelectedFileList.indices) fileList.remove(SelectedFileList.get(i))
+                adapter?.notifyDataSetChanged()
+                if (mActionMode != null) {
+                    mActionMode!!.finish()
+                }
+                Toast.makeText(
+                    applicationContext,
+                    "Delete Click",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else if (from == 2) {
+            if (mActionMode != null) {
+                mActionMode!!.finish()
+            }
+          /*  val mSample =
+                SampleModel("Name" + fileList.size, "Designation" + user_list.size)
+            user_list.add(mSample)*/
+            adapter?.notifyDataSetChanged()
+        }
+    }
+
+    override fun onNegativeClick(from: Int) {}
+
+    override fun onNeutralClick(from: Int) {}
     private fun getFileList(folderName: String) {
 
         fileList = fileDBHelper.getAllFiles(folderName)
-
+        //SelectedFileList = fileDBHelper.getAllFiles(folderName)
         setupRecyclerView()
         /* val f = File(Environment.getExternalStorageDirectory(), APPLICATON_FOLDER_NAME +"/" + folderName )
          val files = f.listFiles()
@@ -156,7 +286,8 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
             startActivity(intent)
         } else {
             val intent = Intent(this, FullscreenImageActivity::class.java)
-            intent.putExtra(Constant.DATA, data.newpath)
+            intent.putExtra(Constant.DATA, fileList)
+            intent.putExtra(Constant.POSITION, position)
             startActivity(intent)
         }
 
@@ -204,79 +335,78 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
              Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath() + "/" + fileName
 
          )*/
-        if (File(newpath).renameTo(File(originalpath))) {
+
+       /* val encryptedData = File(newpath).readBytes()
+        val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+
+            val fos = FileOutputStream(originalpath)
+            fos.write(decryptedData)
+            fos.close()*/
+            val result = fileDBHelper.deleteFile(id)
+            getFileList(folderName.toString())
+
+
+            savefile(File(newpath), originalpath)
+
+
+
+       /* if (File(newpath).renameTo(File(originalpath))) {
 
             // Toast.makeText(this, "moved done...", Toast.LENGTH_SHORT).show();
 
-            val result = fileDBHelper.deleteFile(id)
-            getFileList(folderName.toString())
+
             // Toast.makeText(this, "delete done", Toast.LENGTH_SHORT).show();
             //  EncriptDycript.delete(this, File(newpath))
-            /*    if (EncriptDycript.delete(this, File(newpath)))
+            *//*    if (EncriptDycript.delete(this, File(newpath)))
               {
 
                 }else{
                     Toast.makeText(this, "not done", Toast.LENGTH_SHORT).show();
-                }*/
+                }*//*
 
 
             // adapter?.notifyDataSetChanged()
         } else {
             Toast.makeText(this, "Not moved", Toast.LENGTH_SHORT).show();
-        }
-        /*    var `in`: InputStream? = null
-            var out: OutputStream? = null
-            try {
-                //create output directory if it doesn't exist
-                val dir = File(newpath)
-                if (!dir.exists()) {
-                    dir.mkdirs()
-                }
-                `in` = FileInputStream(newpath)
-                out = FileOutputStream(originalpath)
-                val buffer = ByteArray(1024)
-                val read: Int
-                var length = `in`.read(buffer)
-                // read = `in`.read(buffer)
-                while (length > 0) {
-                    //out.write(buffer, 0, read)
-                    out.write(buffer, 0, length)
-                    length = `in`.read(buffer)
-                }
-                `in`.close()
-                `in` = null
-                // write the output file
-                out.flush()
-                out.close()
-                out = null
+        }*/
 
-                if (EncriptDycript.delete(this, File(originalpath))) {
-                    val result = fileDBHelper.deleteFile(id)
-                    if(result){
-                        folderName?.let { getFileList(it) }
-                        Log.d("delete", "yes")
-                    }
-
-                }else{
-                    Toast.makeText(this, "No", Toast.LENGTH_SHORT).show();
-                }
-                // delete the original file
-                //  File(inputPath).delete()
-            } catch (fnfe1: FileNotFoundException) {
-                Log.e("tag", "error")
-            } catch (e: Exception) {
-                Log.e("tag", e.message)
-            }*/
     }
+    fun savefile(sourceuri: File, Destination: String) {
+        var bis: BufferedInputStream? = null
+        var bos: BufferedOutputStream? = null
+        val encryptedData= sourceuri.readBytes()
+        val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
 
+
+       // ImageStorageManager.saveToInternalStorage(this,BitmapFactory.decodeByteArray(decryptedData, 0, decryptedData.size),Destination)
+        try {
+            bis = BufferedInputStream(ByteArrayInputStream(decryptedData))
+            bos = BufferedOutputStream(FileOutputStream(Destination, false))
+            val buf = ByteArray(1024)
+            bis.read(buf)
+            do {
+                bos.write(buf)
+            } while (bis.read(buf) != -1)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                bis?.close()
+                bos?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+        ImageEncryptDecrypt.insertFile(this,File(Destination))
+        ImageEncryptDecrypt.delete(this, sourceuri)
+    }
     private fun pickImageFromGallery() {
         ImagePicker.create(this)
-            .returnAfterFirst(true) // set whether pick or camera action should return immediate result or not. For pick image only work on single mode
+            .returnAfterFirst(false) // set whether pick or camera action should return immediate result or not. For pick image only work on single mode
             .folderMode(true) // folder mode (false by default)
             .folderTitle("Folder") // folder selection title
             .imageTitle("Tap to select") // image selection title
-            .single() // single mode
-            .limit(1) // max images can be selected (99 by default)
+            .multi() // single mode // max images can be selected (99 by default)
             .showCamera(true) // show camera or not (true by default)
             .imageDirectory("Camera")
             .origin(images)// directory name for captured image  ("Camera" folder by default)
@@ -290,19 +420,8 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
     @SuppressLint("MissingSuperCall")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == Activity.RESULT_OK && requestCode == IMAGE_PICK_CODE) {
-            val images = ImagePicker.getImages(data)
-            val sb = StringBuilder()
-            var i = 0
-            val l = images.size
-            while (i < l) {
-                sb.append(images[i].path)
-                i++
-            }
-
-
-
-            getFilePath(sb.trim().toString(), Constant.IMAGE)
-
+            images = ImagePicker.getImages(data) as java.util.ArrayList<Image>
+            MyAsyncTask().execute(images)
 
         }
         if (requestCode == VIDEO_PICK_CODE) {
@@ -312,7 +431,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 val f = File(chosenVideo.getPathOrigin(this))
                 if (f.exists()) {
                     Log.d("original_Path=====", f.absolutePath)
-                    getFilePath(f.absolutePath, Constant.VIDEO)
+                    //getFilePath(f.absolutePath, Constant.VIDEO)
                 } else {
                     Toast.makeText(
                         this,
@@ -326,83 +445,9 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
     }
 
-    private fun getFilePath(originalpath: String, type: String) {
-        var fileName: String =
-            originalpath.substring(originalpath.lastIndexOf("/") + 1);
-        val newpath = Environment.getExternalStorageDirectory()
-            .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
-        //moveFile(path,fileName,rootPath)
-        moveFile(originalpath, fileName, newpath, folderName.toString(), type)
 
-    }
 
-    private fun moveFile(
-        originalpath: String,
-        inputFile: String,
-        newpath: String,
-        folderName: String,
-        type: String
-    ) {
-        /*  if( File(inputPath).renameTo(File(outputPath + inputFile + ".hide")))
-          {
-              File(inputPath).delete()
 
-              adapter?.notifyDataSetChanged()
-          }else{
-              Log.e("notMoved", "error")
-          }*/
-        //  var path: Path = Files.move(Paths.get(inputFile),Paths.get(outputPath + inputFile + ".hide"))
-        var `in`: InputStream? = null
-        var out: OutputStream? = null
-        try {
-            //create output directory if it doesn't exist
-            val dir = File(originalpath)
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
-            `in` = FileInputStream(originalpath)
-            out = FileOutputStream(newpath + inputFile)
-            val buffer = ByteArray(1024)
-            val read: Int
-            var length = `in`.read(buffer)
-            // read = `in`.read(buffer)
-            while (length > 0) {
-                //out.write(buffer, 0, read)
-                out.write(buffer, 0, length)
-                length = `in`.read(buffer)
-            }
-            `in`.close()
-            `in` = null
-            // write the output file
-            out.flush()
-            out.close()
-            out = null
-
-            val size = Utility.calculateSize(File(originalpath).length().toInt() / 1024)
-            val result = fileDBHelper.insertFile(
-                FileListModal(
-                    UUID.randomUUID().toString(),
-                    inputFile,
-                    size,
-                    originalpath,
-                    newpath + inputFile,
-                    folderName,
-                    type
-                )
-            )
-            getFileList(folderName)
-            if (result) Log.d("file add===", "yes")
-            if (EncriptDycript.delete(this, File(originalpath))) {
-                Log.d("delete", "yes")
-            }
-            // delete the original file
-            //  File(inputPath).delete()
-        } catch (fnfe1: FileNotFoundException) {
-            Log.e("tag", "error")
-        } catch (e: Exception) {
-            Log.e("tag", e.message)
-        }
-    }
 
     fun renameFile(inFile: FileListModal) {
         val context = this
@@ -464,41 +509,6 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
         builder.show();
     }
 
-    fun savefile(sourceuri: Uri, destinationFilename: String, newpath: String, id: String) {
-        val sourceFilename: String? = sourceuri.path
-
-        var bis: BufferedInputStream? = null
-        var bos: BufferedOutputStream? = null
-        try {
-            bis = BufferedInputStream(FileInputStream(sourceFilename))
-            bos = BufferedOutputStream(FileOutputStream(destinationFilename, false))
-            val buf = ByteArray(1024)
-            bis.read(buf)
-            do {
-                bos.write(buf)
-            } while (bis.read(buf) !== -1)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } finally {
-            try {
-                bis?.close()
-                bos?.close()
-
-                if (EncriptDycript.delete(this, File(newpath))) {
-                    val result = fileDBHelper.deleteFile(id)
-                    if (result) {
-                        folderName?.let { getFileList(it) }
-                        Log.d("delete", "yes")
-                    }
-
-                } else {
-                    Toast.makeText(this, "No", Toast.LENGTH_SHORT).show();
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-    }
 
     private fun runLayoutAnimation(recyclerView: RecyclerView) {
         val context = recyclerView.getContext()
@@ -531,4 +541,84 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
             .create()
         myQuittingDialogBox.show()
     }
+
+    // AsyncTask inner class
+    inner class MyAsyncTask : AsyncTask<List<Image>, Int, String>() {
+
+        private var result: String = "";
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+          //  progressBar.visibility = View.VISIBLE
+        }
+
+        override fun onProgressUpdate(vararg values: Int?) {
+            super.onProgressUpdate(*values)
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+           // progressBar.visibility = View.GONE
+            getFileList(folderName.toString())
+            //set result in textView
+
+            images.clear()
+        }
+
+        override fun doInBackground(vararg params: List<Image>): String? {
+
+            for (imagelist in images) {
+
+                val newpath = Environment.getExternalStorageDirectory()
+                    .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
+
+                val encryptByte = ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
+
+                val fos = FileOutputStream(newpath+File(imagelist.path).name)
+                fos.write(encryptByte)
+                fos.close()
+
+                val size = Utility.calculateSize(File(imagelist.path).length().toInt() / 1024)
+                val result = fileDBHelper.insertFile(
+                    FileListModal(
+                        UUID.randomUUID().toString(),
+                        File(imagelist.path).name,
+                        size,
+                        imagelist.path,
+                        newpath+File(imagelist.path).name,
+                        folderName.toString(),
+                        Constant.IMAGE
+                    )
+                )
+
+                ImageEncryptDecrypt.delete(this@FolderDetailActivity,File( imagelist.path))
+                //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
+            }
+            return result
+        }
+    }
+
+    class ImageStorageManager {
+        companion object {
+            fun saveToInternalStorage(context: Context, bitmapImage: Bitmap, imageFileName: String): String {
+                context.openFileOutput(imageFileName, Context.MODE_PRIVATE).use { fos ->
+                    bitmapImage.compress(Bitmap.CompressFormat.PNG, 25, fos)
+                }
+                return context.filesDir.absolutePath
+            }
+
+            fun getImageFromInternalStorage(context: Context, imageFileName: String): Bitmap? {
+                val directory = context.filesDir
+                val file = File(directory, imageFileName)
+                return BitmapFactory.decodeStream(FileInputStream(file))
+            }
+
+            fun deleteImageFromInternalStorage(context: Context, imageFileName: String): Boolean {
+                val dir = context.filesDir
+                val file = File(dir, imageFileName)
+                return file.delete()
+            }
+        }
+    }
+
 }
