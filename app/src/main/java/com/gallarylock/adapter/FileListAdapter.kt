@@ -76,12 +76,23 @@ class FileListAdapter (var folderList: ArrayList<FileListModal>, var folderSelec
                 .asBitmap()
                 .into(imageview)
             //  textViewAddress.text = user.address
-            imgOption.setOnClickListener {listener.onOptionItemSelect(adapterPosition,file,imgOption)  }
+
+            itemView.setOnLongClickListener {
+                val p = layoutPosition
+                listener.onItemLongClick(position)
+                println("LongClick: $p")
+                 true // returning true instead of false, works for me
+
+            }
+
+           imgOption.setOnClickListener {listener.onOptionItemSelect(adapterPosition,file,imgOption)  }
             itemView.setOnClickListener { listener.onItemSelect(adapterPosition,file) }
         }
     }
     interface OnItemSelected{
+       fun onItemLongClick( position: Int)
         fun onItemSelect(position: Int, data: FileListModal)
         fun onOptionItemSelect(position: Int, data: FileListModal, itemView: View)
     }
+
 }

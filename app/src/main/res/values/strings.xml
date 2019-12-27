@@ -6,4 +6,9 @@
     <string name="enter_4_pin">ENTER 4 DIGIT PIN</string>
     <string name="validation_empty">enter name</string>
     <string name="ok">OK</string>
+    <string name="unhide_to">Unhide to</string>
+    <string name="unhide">UNHIDE</string>
+    <string name="cancel">CANCEL</string>
+    <string name="original_path">Original Path</string>
+    <string name="dcim_gallerylocker_unhide">DCIM/GalleryLocker/Unhide</string>
 </resources>

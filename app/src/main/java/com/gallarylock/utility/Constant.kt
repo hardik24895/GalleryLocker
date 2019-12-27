@@ -1,6 +1,8 @@
 package com.gallarylock.utility
 
 object Constant {
+    const val ORIGINAL="original"
+    const val UNHIDE="unhide"
     const val PIN = "pin"
     const val EMAIL = "id"
     const val DATA = "data"

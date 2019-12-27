@@ -17,18 +17,23 @@ import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.EditText
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.contestee.extention.invisible
+import com.contestee.extention.visible
 import com.esafirm.imagepicker.features.ImagePicker
 import com.esafirm.imagepicker.model.Image
 import com.gallarylock.R
 import com.gallarylock.Utility
 import com.gallarylock.adapter.FileListAdapter
 import com.gallarylock.database.FileDBHelper
+import com.gallarylock.dialog.DialogFolderSelection
+import com.gallarylock.dialog.DialogUnhideOption
 import com.gallarylock.modal.FileListModal
 import com.gallarylock.utility.AlertDialogHelper
 import com.gallarylock.utility.Constant
@@ -43,7 +48,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected , AlertDialogHelper.AlertDialogListener{
+class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected,
+    AlertDialogHelper.AlertDialogListener {
     private var adapter: FileListAdapter? = null
     private var selectedPath: String? = null
     var fileList = ArrayList<FileListModal>()
@@ -56,6 +62,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
     var context_menu: Menu? = null
     var isMultiSelect = false
     var alertDialogHelper: AlertDialogHelper? = null
+
     companion object {
         //image pick code
         private val IMAGE_PICK_CODE = 1000;
@@ -139,47 +146,66 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
     private fun setupRecyclerView() {
         val layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
-        adapter = FileListAdapter(fileList, SelectedFileList,this, this)
+        adapter = FileListAdapter(fileList, SelectedFileList, this, this)
         recyclerView.adapter = adapter
         runLayoutAnimation(recyclerView)
-        recyclerView.addOnItemTouchListener(
-            RecyclerItemClickListener(
-                this,
-                recyclerView,
-                object : RecyclerItemClickListener.OnItemClickListener {
-                    override fun onItemClick(view: View?, position: Int) {
-                        if (isMultiSelect) multi_select(position) else Toast.makeText(
-                            applicationContext,
-                            "Details Page",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+        /* recyclerView.addOnItemTouchListener(
+             RecyclerItemClickListener(
+                 this,
+                 recyclerView,
+                 object : RecyclerItemClickListener.OnItemClickListener {
+                     override fun onItemClick(view: View?, position: Int) {
+                         if (isMultiSelect) multi_select(position)
+                         else
 
-                    override fun onItemLongClick(view: View?, position: Int) {
-                        if (!isMultiSelect) {
-                             SelectedFileList = ArrayList<FileListModal>()
-                            isMultiSelect = true
-                            if (mActionMode == null) {
-                                mActionMode = startActionMode(mActionModeCallback)
-                            }
-                        }
-                        multi_select(position)
-                    }
-                })
-        )
+                             if (fileList.get(position) .filetype.equals(Constant.VIDEO)) {
+                                 val intent = Intent(this@FolderDetailActivity, FullScreenPlayerActivity::class.java)
+                                 intent.putExtra(Constant.DATA, fileList.get(position).newpath)
+                                 startActivity(intent)
+                             } else {
+                                 val intent = Intent(this@FolderDetailActivity, FullscreenImageActivity::class.java)
+                                 intent.putExtra(Constant.DATA, fileList)
+                                 intent.putExtra(Constant.POSITION, position)
+                                 startActivity(intent)
+                             }
+                             Toast.makeText(
+                             applicationContext,
+                             "Details Page",
+                             Toast.LENGTH_SHORT
+                         ).show()
+                     }
 
+                     override fun onItemLongClick(view: View?, position: Int) {
+                         if (!isMultiSelect) {
+                              SelectedFileList = ArrayList<FileListModal>()
+                             isMultiSelect = true
+                             if (mActionMode == null) {
+                                 toolbar2.invisible()
+                                 mActionMode = startActionMode(mActionModeCallback)
+                             }
+                         }
+                         if(position>-1){
+                             multi_select(position)
+                         }
+
+                     }
+                 })
+         )*/
     }
 
     fun multi_select(position: Int) {
-        if (mActionMode != null) {
-            if (SelectedFileList.contains(fileList.get(position))) SelectedFileList.remove(
-                fileList.get(position)
-            ) else SelectedFileList.add(fileList.get(position))
-            if (SelectedFileList.size > 0) mActionMode!!.title =
-                "" + SelectedFileList.size else mActionMode!!.title =
-                ""
-            refreshAdapter()
+        if (position > -1) {
+            if (mActionMode != null) {
+                if (SelectedFileList.contains(fileList.get(position))) SelectedFileList.remove(
+                    fileList.get(position)
+                ) else SelectedFileList.add(fileList.get(position))
+                if (SelectedFileList.size > 0) mActionMode!!.title =
+                    "" + SelectedFileList.size else mActionMode!!.title =
+                    ""
+                refreshAdapter()
+            }
         }
+
     }
 
     fun refreshAdapter() {
@@ -223,6 +249,12 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                         )
                         true
                     }
+
+                    R.id.action_unhide -> {
+                        unHideSelectFile()
+                        true
+                    }
+
                     else -> false
                 }
             }
@@ -230,8 +262,9 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
             override fun onDestroyActionMode(mode: ActionMode) {
                 mActionMode = null
                 isMultiSelect = false
-                SelectedFileList =  ArrayList<FileListModal>()
+                SelectedFileList = ArrayList<FileListModal>()
                 refreshAdapter()
+                toolbar2.visible()
             }
         }
 
@@ -253,17 +286,93 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
         } else if (from == 2) {
             if (mActionMode != null) {
                 mActionMode!!.finish()
+
             }
-          /*  val mSample =
-                SampleModel("Name" + fileList.size, "Designation" + user_list.size)
-            user_list.add(mSample)*/
+            /*  val mSample =
+                  SampleModel("Name" + fileList.size, "Designation" + user_list.size)
+              user_list.add(mSample)*/
             adapter?.notifyDataSetChanged()
         }
     }
 
+
     override fun onNegativeClick(from: Int) {}
 
     override fun onNeutralClick(from: Int) {}
+
+    private fun unHideSelectFile() {
+
+        var pathList = ArrayList<FileListModal>()
+
+        if (SelectedFileList.size > 0) {
+            for (i in SelectedFileList.indices){
+                pathList.add(
+                    FileListModal(
+                        SelectedFileList[i].id,
+                        SelectedFileList[i].name,
+                        SelectedFileList[i].size,
+                        SelectedFileList[i].originalpath,
+                        SelectedFileList[i].newpath,
+                        folderName.toString(),
+                        ""
+                    )
+                )
+            }
+
+
+            if (mActionMode != null) {
+                mActionMode!!.finish()
+            }
+
+        }
+
+        val folderDirectory = File(
+            Environment.getExternalStorageDirectory()
+                .getAbsolutePath() + "/" + "DCIM" + "/" + "Gallary Locker",
+            folderName
+        )
+        if (!folderDirectory.exists()) {
+            folderDirectory.mkdirs()
+        }
+
+
+        val dialog = DialogUnhideOption
+            .newInstance(
+                this,
+                pathList,
+                folderName.toString(),
+                object : DialogUnhideOption.OnItemClick {
+                    override fun onItemCLicked(text: String, files: ArrayList<FileListModal>) {
+
+                        if (text.equals(Constant.ORIGINAL)) {
+                            for (i in files.indices) {
+                                val result = fileDBHelper.deleteFile(files[i].id)
+                                savefile(File(files[i].newpath), files[i].originalpath)
+
+                            }
+
+                        } else {
+                            for (i in files.indices) {
+                                val unhidepath = Environment.getExternalStorageDirectory()
+                                    .getAbsolutePath() + "/" + "DCIM" + "/" + "Gallary Locker" + "/" + folderName + "/" + files[i].name
+
+
+                                val result = fileDBHelper.deleteFile(files[i].id)
+                                savefile(File(files[i].newpath), unhidepath)
+                            }
+
+                        }
+
+
+                        getFileList(folderName.toString())
+
+                        //moveFile(path,fileName,rootPath)
+
+                    }
+                })
+        dialog.show(supportFragmentManager, "ok")
+    }
+
     private fun getFileList(folderName: String) {
 
         fileList = fileDBHelper.getAllFiles(folderName)
@@ -278,17 +387,34 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
          }*/
     }
 
-    override fun onItemSelect(position: Int, data: FileListModal) {
+    override fun onItemLongClick(position: Int) {
+        if (!isMultiSelect) {
+            SelectedFileList = ArrayList<FileListModal>()
+            isMultiSelect = true
+            if (mActionMode == null) {
+                toolbar2.invisible()
+                mActionMode = startActionMode(mActionModeCallback)
+            }
+        }
+        if (position > -1) {
+            multi_select(position)
+        }
+    }
 
-        if (data.filetype.equals(Constant.VIDEO)) {
-            val intent = Intent(this, FullScreenPlayerActivity::class.java)
-            intent.putExtra(Constant.DATA, data.newpath)
-            startActivity(intent)
-        } else {
-            val intent = Intent(this, FullscreenImageActivity::class.java)
-            intent.putExtra(Constant.DATA, fileList)
-            intent.putExtra(Constant.POSITION, position)
-            startActivity(intent)
+
+    override fun onItemSelect(position: Int, data: FileListModal) {
+        if (isMultiSelect) multi_select(position)
+        else {
+            if (data.filetype.equals(Constant.VIDEO)) {
+                val intent = Intent(this, FullScreenPlayerActivity::class.java)
+                intent.putExtra(Constant.DATA, data.newpath)
+                startActivity(intent)
+            } else {
+                val intent = Intent(this, FullscreenImageActivity::class.java)
+                intent.putExtra(Constant.DATA, fileList)
+                intent.putExtra(Constant.POSITION, position)
+                startActivity(intent)
+            }
         }
 
 
@@ -336,28 +462,68 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
          )*/
 
-       /* val encryptedData = File(newpath).readBytes()
-        val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+        /* val encryptedData = File(newpath).readBytes()
+         val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
 
-            val fos = FileOutputStream(originalpath)
-            fos.write(decryptedData)
-            fos.close()*/
-            val result = fileDBHelper.deleteFile(id)
-            getFileList(folderName.toString())
+             val fos = FileOutputStream(originalpath)
+             fos.write(decryptedData)
+             fos.close()*/
 
 
-            savefile(File(newpath), originalpath)
+        var pathList = ArrayList<FileListModal>()
+        pathList.add(
+            FileListModal(
+                id,
+                "",
+                "",
+                originalpath,
+                newpath,
+                folderName.toString(),
+                ""
+            )
+        )
+        val folderDirectory = File(
+            Environment.getExternalStorageDirectory()
+                .getAbsolutePath() + "/" + "DCIM" + "/" + "Gallary Locker",
+            folderName
+        )
+        if (!folderDirectory.exists()) {
+            folderDirectory.mkdirs()
+        }
+
+        val unhidepath = Environment.getExternalStorageDirectory()
+            .getAbsolutePath() + "/" + "DCIM" + "/" + "Gallary Locker" + "/" + folderName + "/" + fileName
 
 
+        val dialog = DialogUnhideOption
+            .newInstance(
+                this,
+                pathList,
+                folderName.toString(),
+                object : DialogUnhideOption.OnItemClick {
+                    override fun onItemCLicked(text: String,files: ArrayList<FileListModal>) {
+                        val result = fileDBHelper.deleteFile(id)
+                        getFileList(folderName.toString())
+                        if (text.equals(Constant.ORIGINAL)) {
+                            savefile(File(newpath), originalpath)
+                        } else {
+                            savefile(File(newpath), unhidepath)
+                        }
 
-       /* if (File(newpath).renameTo(File(originalpath))) {
+                        //moveFile(path,fileName,rootPath)
 
-            // Toast.makeText(this, "moved done...", Toast.LENGTH_SHORT).show();
+                    }
+                })
+        dialog.show(supportFragmentManager, "ok")
+
+        /* if (File(newpath).renameTo(File(originalpath))) {
+
+             // Toast.makeText(this, "moved done...", Toast.LENGTH_SHORT).show();
 
 
-            // Toast.makeText(this, "delete done", Toast.LENGTH_SHORT).show();
-            //  EncriptDycript.delete(this, File(newpath))
-            *//*    if (EncriptDycript.delete(this, File(newpath)))
+             // Toast.makeText(this, "delete done", Toast.LENGTH_SHORT).show();
+             //  EncriptDycript.delete(this, File(newpath))
+             *//*    if (EncriptDycript.delete(this, File(newpath)))
               {
 
                 }else{
@@ -371,14 +537,15 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
         }*/
 
     }
+
     fun savefile(sourceuri: File, Destination: String) {
         var bis: BufferedInputStream? = null
         var bos: BufferedOutputStream? = null
-        val encryptedData= sourceuri.readBytes()
+        val encryptedData = sourceuri.readBytes()
         val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
 
 
-       // ImageStorageManager.saveToInternalStorage(this,BitmapFactory.decodeByteArray(decryptedData, 0, decryptedData.size),Destination)
+        // ImageStorageManager.saveToInternalStorage(this,BitmapFactory.decodeByteArray(decryptedData, 0, decryptedData.size),Destination)
         try {
             bis = BufferedInputStream(ByteArrayInputStream(decryptedData))
             bos = BufferedOutputStream(FileOutputStream(Destination, false))
@@ -397,9 +564,10 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 e.printStackTrace()
             }
         }
-        ImageEncryptDecrypt.insertFile(this,File(Destination))
+        ImageEncryptDecrypt.insertFile(this, File(Destination))
         ImageEncryptDecrypt.delete(this, sourceuri)
     }
+
     private fun pickImageFromGallery() {
         ImagePicker.create(this)
             .returnAfterFirst(false) // set whether pick or camera action should return immediate result or not. For pick image only work on single mode
@@ -444,9 +612,6 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
         }
 
     }
-
-
-
 
 
     fun renameFile(inFile: FileListModal) {
@@ -549,7 +714,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
         override fun onPreExecute() {
             super.onPreExecute()
-          //  progressBar.visibility = View.VISIBLE
+            //  progressBar.visibility = View.VISIBLE
         }
 
         override fun onProgressUpdate(vararg values: Int?) {
@@ -558,7 +723,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
-           // progressBar.visibility = View.GONE
+            // progressBar.visibility = View.GONE
             getFileList(folderName.toString())
             //set result in textView
 
@@ -572,9 +737,10 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 val newpath = Environment.getExternalStorageDirectory()
                     .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
 
-                val encryptByte = ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
+                val encryptByte =
+                    ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
 
-                val fos = FileOutputStream(newpath+File(imagelist.path).name)
+                val fos = FileOutputStream(newpath + File(imagelist.path).name)
                 fos.write(encryptByte)
                 fos.close()
 
@@ -585,13 +751,13 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                         File(imagelist.path).name,
                         size,
                         imagelist.path,
-                        newpath+File(imagelist.path).name,
+                        newpath + File(imagelist.path).name,
                         folderName.toString(),
                         Constant.IMAGE
                     )
                 )
 
-                ImageEncryptDecrypt.delete(this@FolderDetailActivity,File( imagelist.path))
+                ImageEncryptDecrypt.delete(this@FolderDetailActivity, File(imagelist.path))
                 //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
             }
             return result
@@ -600,7 +766,11 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
     class ImageStorageManager {
         companion object {
-            fun saveToInternalStorage(context: Context, bitmapImage: Bitmap, imageFileName: String): String {
+            fun saveToInternalStorage(
+                context: Context,
+                bitmapImage: Bitmap,
+                imageFileName: String
+            ): String {
                 context.openFileOutput(imageFileName, Context.MODE_PRIVATE).use { fos ->
                     bitmapImage.compress(Bitmap.CompressFormat.PNG, 25, fos)
                 }
