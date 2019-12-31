@@ -90,6 +90,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 closeFABMenu();
             }
         }
+        fab1.invisible()
         fab1.setOnClickListener {
             val builder = MediaOptions.Builder()
             var options: MediaOptions? = null

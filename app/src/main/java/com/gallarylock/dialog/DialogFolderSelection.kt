@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
@@ -54,10 +55,17 @@ class DialogFolderSelection  (context: Context) : BlurDialogFragment(), Lifecycl
             radio_group.addView(rb)
         }
         btnok.setOnClickListener {
+
             val Id:Int = radio_group.checkedRadioButtonId
-            val rb :RadioButton = view.findViewById(Id)
-            listener.onItemCLicked(rb)
-            dismissAllowingStateLoss()
+
+           if(Id==-1){
+               Toast.makeText(context,"Please select one folder",Toast.LENGTH_SHORT).show()
+           }else{
+               val rb :RadioButton = view.findViewById(Id)
+               listener.onItemCLicked(rb)
+               dismissAllowingStateLoss()
+           }
+
         }
         btncancel.setOnClickListener {
             dismissAllowingStateLoss()

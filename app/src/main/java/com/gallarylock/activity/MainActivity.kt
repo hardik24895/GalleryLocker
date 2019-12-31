@@ -6,19 +6,18 @@ import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Environment.getExternalStorageDirectory
 import android.util.Log
-import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.EditText
 import android.widget.RadioButton
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -55,6 +54,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     lateinit var folderDBHelper: FolderDBHelper
 
     lateinit var fileDBHelper: FileDBHelper
+    private var images = java.util.ArrayList<com.esafirm.imagepicker.model.Image>()
 
     companion object {
         //image pick code
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     var isFABOpen: Boolean = false
     var folderlist = ArrayList<FolderListModal>()
-    private val images = java.util.ArrayList<Image>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -285,12 +285,11 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     private fun pickImageFromGallery() {
         ImagePicker.create(this)
-            .returnAfterFirst(true) // set whether pick or camera action should return immediate result or not. For pick image only work on single mode
+            .returnAfterFirst(false) // set whether pick or camera action should return immediate result or not. For pick image only work on single mode
             .folderMode(true) // folder mode (false by default)
             .folderTitle("Folder") // folder selection title
             .imageTitle("Tap to select") // image selection title
-            .single() // single mode
-            .limit(1) // max images can be selected (99 by default)
+            .multi() // single mode // max images can be selected (99 by default)
             .showCamera(true) // show camera or not (true by default)
             .imageDirectory("Camera")
             .origin(images)// directory name for captured image  ("Camera" folder by default)
@@ -300,10 +299,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     }
 
-    private fun getFilePath(path: String, type: String) {
-        showRadioButtonDialog(path, type)
 
-    }
 
     private fun moveFile(
         originalpath: String,
@@ -378,19 +374,13 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     @SuppressLint("MissingSuperCall")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == Activity.RESULT_OK && requestCode == IMAGE_PICK_CODE) {
-            val images = ImagePicker.getImages(data) as java.util.ArrayList<Image>
-            val sb = StringBuilder()
-            var i = 0
-            val l = images.size
-            while (i < l) {
-                sb.append(images[i].path)
-                i++
-            }
-            getFilePath(sb.trim().toString(), Constant.IMAGE)
+            images = ImagePicker.getImages(data) as java.util.ArrayList<Image>
+
+            showRadioButtonDialog()
 
 
         }
-        if (requestCode == VIDEO_PICK_CODE) {
+        /*if (requestCode == VIDEO_PICK_CODE) {
             if (MediaPickerActivity.getMediaItemSelected(data) != null) {
                 val chosenVideo =
                     MediaPickerActivity.getMediaItemSelected(data).get(0)
@@ -407,7 +397,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 }
             }
 
-        }
+        }*/
         /*if (requestCode == ImagePicker.IMAGE_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
             val path= data?.getStringArrayListExtra(ImagePicker.EXTRA_IMAGE_PATH);
             getFilePath(path?.get(0).toString())
@@ -536,19 +526,14 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         builder.show();
     }
 
-    private fun showRadioButtonDialog(originalpath: String, type: String) {
+    private fun showRadioButtonDialog() {
         val dialog = DialogFolderSelection
             .newInstance(
                 this,
                 folderlist,
                 object : DialogFolderSelection.OnItemClick {
-                    override fun onItemCLicked(text: RadioButton) {
-                        var fileName: String =
-                            originalpath.substring(originalpath.lastIndexOf("/") + 1);
-                        val newpath = Environment.getExternalStorageDirectory()
-                            .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + text.text + "/"
-                        //moveFile(path,fileName,rootPath)
-                        moveFile(originalpath, fileName, newpath, text.text.toString(), type)
+                    override fun onItemCLicked(foldername: RadioButton) {
+                        MyTask().execute(foldername.text.toString())
                     }
                 })
         dialog.show(supportFragmentManager, "ok")
@@ -604,4 +589,113 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             .create()
         myQuittingDialogBox.show()
     }
+
+
+   /* // AsyncTask inner class
+    inner class MyAsyncTask : AsyncTask<List<Image>, Int, String>() {
+
+        private var result: String = "";
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+            //  progressBar.visibility = View.VISIBLE
+        }
+
+        override fun onProgressUpdate(vararg values: Int?) {
+            super.onProgressUpdate(*values)
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            // progressBar.visibility = View.GONE
+            getFileList(folderName.toString())
+            //set result in textView
+
+            images.clear()
+        }
+
+        override fun doInBackground(vararg params: List<Image>): String? {
+
+            for (imagelist in images) {
+
+                val newpath = Environment.getExternalStorageDirectory()
+                    .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
+
+                val encryptByte =
+                    ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
+
+                val fos = FileOutputStream(newpath + File(imagelist.path).name)
+                fos.write(encryptByte)
+                fos.close()
+
+                val size = Utility.calculateSize(File(imagelist.path).length().toInt() / 1024)
+                val result = fileDBHelper.insertFile(
+                    FileListModal(
+                        UUID.randomUUID().toString(),
+                        File(imagelist.path).name,
+                        size,
+                        imagelist.path,
+                        newpath + File(imagelist.path).name,
+                        folderName.toString(),
+                        Constant.IMAGE
+                    )
+                )
+
+                ImageEncryptDecrypt.delete(this@MainActivity, File(imagelist.path))
+                //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
+            }
+            return result
+        }
+    }*/
+   inner class MyTask:AsyncTask<String, Int, String>() {
+       private var result: String = "";
+
+       override  protected fun doInBackground(vararg folderName:String):String {
+           // do something in background
+         for (imagelist in images) {
+
+             val folderName1 = folderName.get(0)
+             val newpath = Environment.getExternalStorageDirectory()
+                 .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName1.toString() + "/"
+
+             val encryptByte =
+                 ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
+
+             val fos = FileOutputStream(newpath + File(imagelist.path).name)
+             fos.write(encryptByte)
+             fos.close()
+
+             val size = Utility.calculateSize(File(imagelist.path).length().toInt() / 1024)
+             val result = fileDBHelper.insertFile(
+                 FileListModal(
+                     UUID.randomUUID().toString(),
+                     File(imagelist.path).name,
+                     size,
+                     imagelist.path,
+                     newpath + File(imagelist.path).name,
+                     folderName1,
+                     Constant.IMAGE
+                 )
+             )
+
+             ImageEncryptDecrypt.delete(this@MainActivity, File(imagelist.path))
+             //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
+         }
+         return result
+       }
+      override protected fun onPreExecute() {
+           // do something before start
+       }
+     fun onProgressUpdate(vararg args:Int) {
+
+
+       }
+     override  protected fun onPostExecute(result:String) {
+
+          super.onPostExecute(result)
+         images.clear()
+         getListOfFolder()
+           // do something after execution
+       }
+   }
 }
