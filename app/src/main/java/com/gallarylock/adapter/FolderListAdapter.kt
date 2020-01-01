@@ -10,8 +10,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.gallarylock.R
+import com.gallarylock.activity.ImageEncryptDecrypt
 import com.gallarylock.database.FileDBHelper
 import com.gallarylock.modal.FolderListModal
+import com.gallarylock.utility.Constant
 import com.gallarylock.utility.Constant.APPLICATON_FOLDER_NAME
 import java.io.File
 import java.util.*
@@ -53,28 +55,33 @@ class FolderListAdapter(
             val imgOption = itemView.findViewById(R.id.imgOption) as ImageView
             val txtCount = itemView.findViewById(R.id.txtCount) as TextView
 
-            if ( filesDBHelper.getAllFiles(Folder.name).size > 0) {
+            if (filesDBHelper.getAllFiles(Folder.name).size > 0) {
+                val encryptedData =
+                    File(filesDBHelper.getAllFiles(Folder.name).get(0).newpath).readBytes()
+                val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+
                 Glide.with(context)
-                    .load( filesDBHelper.getAllFiles(Folder.name).get(0).newpath)
+                    .load(decryptedData)
                     .into(imageView)
 
-                txtCount.text = "Total Item :  " +  filesDBHelper.getAllFiles(Folder.name).size.toString()
+                txtCount.text =
+                    "Total Item :  " + filesDBHelper.getAllFiles(Folder.name).size.toString()
             }
             val f = File(
                 Environment.getExternalStorageDirectory(),
                 APPLICATON_FOLDER_NAME + "/" + Folder.name
             )
-            val files = f.listFiles()
-            if (files != null) {
-                if (files.size > 0) {
-                    Glide.with(context)
-                        .load(files.get(0).absoluteFile)
-                        .into(imageView)
+            /*  val files = f.listFiles()
+              if (files != null) {
+                  if (files.size > 0) {
+                      Glide.with(context)
+                          .load(files.get(0).absoluteFile)
+                          .into(imageView)
 
-                    txtCount.text = "Total Item :  " + files.size.toString()
-                }
+                      txtCount.text = "Total Item :  " + files.size.toString()
+                  }
 
-            }
+              }*/
 
             val textViewName = itemView.findViewById(R.id.txtName) as TextView
             //  val textViewAddress  = itemView.findViewById(R.id.textViewAddress) as TextView

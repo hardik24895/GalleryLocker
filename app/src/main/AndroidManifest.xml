@@ -41,6 +41,7 @@
         </activity>
         <activity android:name="com.gallarylock.activity.LoginActivity"
             android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateAlwaysVisible"
             android:screenOrientation="portrait">
         </activity>
         <activity android:name="com.gallarylock.activity.FullScreenPlayerActivity"

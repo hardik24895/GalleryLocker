@@ -18,11 +18,13 @@ import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.EditText
 import android.widget.RadioButton
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.contestee.extention.invisible
 
 import com.gallarylock.Utility.showToast
 import com.gallarylock.adapter.FolderListAdapter
@@ -32,6 +34,7 @@ import com.gallarylock.utility.Constant.APPLICATON_FOLDER_NAME
 import com.esafirm.imagepicker.features.ImagePicker
 import com.esafirm.imagepicker.model.Image
 import com.gallarylock.R
+import com.gallarylock.SessionManager
 import com.gallarylock.Utility
 import com.gallarylock.database.FileDBHelper
 import com.gallarylock.database.FolderDBHelper
@@ -71,6 +74,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         private val PERMISSION_REQUEST_VIDEO = 1002
     }
 
+    lateinit var session: SessionManager
     var isFABOpen: Boolean = false
     var folderlist = ArrayList<FolderListModal>()
 
@@ -78,6 +82,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         folderDBHelper = FolderDBHelper(this)
+        session = SessionManager(this)
         fileDBHelper = FileDBHelper(this)
         setContentView(R.layout.activity_main)
 
@@ -121,6 +126,44 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
         imgNewFolder.setOnClickListener {
             createNewFolder()
+        }
+
+        try
+        {
+           /* val folderDirectory = Environment.getExternalStorageDirectory()
+                .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse" + "/" +"myDB"
+*/
+           /* val folderDirectory = File(
+                Environment.getExternalStorageDirectory()
+                    .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse" + "/" +"myDB"
+
+
+            )
+            if(!folderDirectory.exists()){
+                folderDirectory.mkdirs()
+            }*/
+            val sd = Environment.getExternalStorageDirectory()
+            val data = Environment.getDataDirectory()
+            if (sd.canWrite())
+            {
+                val currentDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
+              //  val backupDBPath = folderDirectory.absolutePath
+                val currentDB = File(data, currentDBPath)
+                val backupDB = File(sd, APPLICATON_FOLDER_NAME)
+                if (currentDB.exists())
+                {
+                    val src = FileInputStream(currentDB).getChannel()
+                    val dst = FileOutputStream(backupDB).getChannel()
+                    dst.transferFrom(src, 0, src.size())
+                    src.close()
+                    dst.close()
+                    Toast.makeText(getBaseContext(), "done", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+        catch (e:Exception) {
+            Log.e("error", e.toString())
+            Toast.makeText(getBaseContext(), e.toString(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -218,6 +261,8 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             }
             getListOfFolder()
         }
+
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -240,7 +285,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     @SuppressLint("RestrictedApi")
     private fun showFABMenu() {
-        fab1.visibility = View.VISIBLE
+        fab1.visibility = View.GONE
         fab2.visibility = View.VISIBLE
         isFABOpen = true
         fab1.animate().translationY(-resources.getDimension(R.dimen.standard_55))

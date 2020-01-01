@@ -11,4 +11,6 @@
     <string name="cancel">CANCEL</string>
     <string name="original_path">Original Path</string>
     <string name="dcim_gallerylocker_unhide">DCIM/GalleryLocker/Unhide</string>
+    <string name="app_settings">App Settings</string>
+    <string name="permission_required">Permission Required</string>
 </resources>

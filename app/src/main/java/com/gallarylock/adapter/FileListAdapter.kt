@@ -58,7 +58,7 @@ class FileListAdapter (var folderList: ArrayList<FileListModal>, var folderSelec
            // if(file.filetype.equals(Constant.VIDEO))  imgplay.visible()
             textViewName.text = file.name
             txtSize.text = "Size: " + file.size
-            val encryptedData = File(file.newpath).readBytes()
+                       val encryptedData = File(file.newpath).readBytes()
             val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
 
             if (folderSelectedList.contains(folderList.get(position)))

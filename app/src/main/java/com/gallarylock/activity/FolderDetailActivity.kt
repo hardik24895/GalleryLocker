@@ -90,7 +90,6 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 closeFABMenu();
             }
         }
-        fab1.invisible()
         fab1.setOnClickListener {
             val builder = MediaOptions.Builder()
             var options: MediaOptions? = null
@@ -126,7 +125,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
     @SuppressLint("RestrictedApi")
     private fun showFABMenu() {
-        fab1.visibility = View.VISIBLE
+        fab1.visibility = View.GONE
         fab2.visibility = View.VISIBLE
         isFABOpen = true
         fab1.animate().translationY(-resources.getDimension(R.dimen.standard_55))
