@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 import com.gallarylock.modal.FileListModal
 import com.gallarylock.modal.FolderListModal
 
@@ -20,6 +21,10 @@ class FolderDBHelper (context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         // to simply to discard the data and start over
         db.execSQL(SQL_DELETE_ENTRIES)
         onCreate(db)
+    }
+
+    override fun onOpen(db: SQLiteDatabase?) {
+        super.onOpen(db)
     }
 
     override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -101,7 +106,14 @@ class FolderDBHelper (context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     fun getAllFOlder(): ArrayList<FolderListModal> {
         val files = ArrayList<FolderListModal>()
+
         val db = writableDatabase
+
+        if(db.isOpen) {
+            Log.e("not open", "yes")
+        }else{
+            Log.e("not open", "no")
+        }
         var cursor: Cursor? = null
         try {
             cursor = db.rawQuery("select * from " + DBFolder.FolderEntry.TABLE_NAME, null)

@@ -6,10 +6,7 @@ import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.AsyncTask
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
 import android.os.Environment.getExternalStorageDirectory
 import android.util.Log
 import android.view.Menu
@@ -46,6 +43,7 @@ import vn.tungdx.mediapicker.MediaOptions
 import vn.tungdx.mediapicker.activities.MediaPickerActivity
 import java.io.*
 import java.util.*
+import javax.mail.Header
 import kotlin.collections.ArrayList
 
 
@@ -128,42 +126,122 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             createNewFolder()
         }
 
-        try
-        {
-           /* val folderDirectory = Environment.getExternalStorageDirectory()
-                .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse" + "/" +"myDB"
-*/
-           /* val folderDirectory = File(
-                Environment.getExternalStorageDirectory()
-                    .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse" + "/" +"myDB"
+        syncDataOnInstall()
+    }
 
-
+    private fun syncData() {
+        val folderDirectory = File(
+            Environment.getExternalStorageDirectory()
+                .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse"
+        )
+        val currentDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
+        val backupDBPath = File(folderDirectory.absolutePath + "/" + "gallaryloker.db")
+        val data = Environment.getDataDirectory()
+        val currentDB = File(data, currentDBPath)
+            copyDataBseToExternal(
+                currentDB.absolutePath,
+                "gallaryloker.db",
+                folderDirectory.absolutePath
             )
-            if(!folderDirectory.exists()){
-                folderDirectory.mkdirs()
-            }*/
-            val sd = Environment.getExternalStorageDirectory()
-            val data = Environment.getDataDirectory()
-            if (sd.canWrite())
-            {
-                val currentDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
-              //  val backupDBPath = folderDirectory.absolutePath
-                val currentDB = File(data, currentDBPath)
-                val backupDB = File(sd, APPLICATON_FOLDER_NAME)
-                if (currentDB.exists())
-                {
-                    val src = FileInputStream(currentDB).getChannel()
-                    val dst = FileOutputStream(backupDB).getChannel()
-                    dst.transferFrom(src, 0, src.size())
-                    src.close()
-                    dst.close()
-                    Toast.makeText(getBaseContext(), "done", Toast.LENGTH_LONG).show();
-                }
+    }
+
+    private fun syncDataOnInstall() {
+        val folderDirectory = File(
+            Environment.getExternalStorageDirectory()
+                .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse"
+        )
+        val currentDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
+        val backupDBPath = File(folderDirectory.absolutePath + "/" + "gallaryloker.db")
+        val data = Environment.getDataDirectory()
+        val currentDB = File(data, currentDBPath)
+
+
+        Handler().postDelayed(Runnable {
+
+            if (backupDBPath.exists()) {
+                // currentDB.mkdir()
+                copyDataBseFromExternal(
+                    backupDBPath.absolutePath,
+                    "gallaryloker.db",
+                    currentDB.absolutePath
+                )
+            } else {
+                copyDataBseToExternal(
+                    currentDB.absolutePath,
+                    "gallaryloker.db",
+                    folderDirectory.absolutePath
+                )
             }
+            getListOfFolder()
+        }, 1000);
+
+
+    }
+
+    private fun copyDataBseFromExternal(inputPath: String, inputFile: String, outputPath: String) {
+        var ins: InputStream? = null
+        var out: OutputStream? = null
+        try {
+            //create output directory if it doesn't exist
+            val dir = File(outputPath)
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+            ins = FileInputStream(inputPath)
+            out = FileOutputStream(outputPath)
+            val buffer = ByteArray(1024)
+            var length = ins.read(buffer)
+            // read = `in`.read(buffer)
+            while (length > 0) {
+                //out.write(buffer, 0, read)
+                out.write(buffer, 0, length)
+                length = ins.read(buffer)
+            }
+            ins.close()
+
+            // write the output file
+            out.flush()
+            out.close()
+            // delete the original file
+            // File(inputPath + inputFile).delete()
+        } catch (fnfe1: FileNotFoundException) {
+            Log.e("tag", fnfe1.message)
+        } catch (e: Exception) {
+            Log.e("tag", e.message)
         }
-        catch (e:Exception) {
-            Log.e("error", e.toString())
-            Toast.makeText(getBaseContext(), e.toString(), Toast.LENGTH_LONG).show();
+    }
+
+
+    private fun copyDataBseToExternal(inputPath: String, inputFile: String, outputPath: String) {
+        var ins: InputStream? = null
+        var out: OutputStream? = null
+        try {
+            //create output directory if it doesn't exist
+            val dir = File(outputPath)
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+            ins = FileInputStream(inputPath)
+            out = FileOutputStream(outputPath + "/" + inputFile)
+            val buffer = ByteArray(1024)
+            var length = ins.read(buffer)
+            // read = `in`.read(buffer)
+            while (length > 0) {
+                //out.write(buffer, 0, read)
+                out.write(buffer, 0, length)
+                length = ins.read(buffer)
+            }
+            ins.close()
+
+            // write the output file
+            out.flush()
+            out.close()
+            // delete the original file
+            // File(inputPath + inputFile).delete()
+        } catch (fnfe1: FileNotFoundException) {
+            Log.e("tag", fnfe1.message)
+        } catch (e: Exception) {
+            Log.e("tag", e.message)
         }
     }
 
@@ -209,16 +287,8 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     }
 
     private fun getListOfFolder() {
-        //val f = File(getExternalStorageDirectory(), APPLICATON_FOLDER_NAME)
-        //val files = f.listFiles()
         folderlist = folderDBHelper.getAllFOlder()
         adapter?.notifyDataSetChanged()
-
-        /* for (inFile in files!!) {
-             if (inFile.isDirectory()) {
-                 folderlist.add(FolderListModal(inFile.name, 0))
-             }
-         }*/
         setupRecyclerView()
     }
 
@@ -320,6 +390,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                 )
             )
             getListOfFolder()
+            syncData()
             Log.d("inserted=====", result.toString())
         } else {
             showToast("Already exist")
@@ -343,7 +414,6 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             .start(IMAGE_PICK_CODE) // start image picker activity with request code
 
     }
-
 
 
     private fun moveFile(
@@ -556,6 +626,7 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                         )
                         source.renameTo(destination)
                         getListOfFolder()
+                        syncData()
                         Log.d("rename===", result.toString())
                     }
                 }
@@ -636,35 +707,72 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     }
 
 
-   /* // AsyncTask inner class
-    inner class MyAsyncTask : AsyncTask<List<Image>, Int, String>() {
+    /* // AsyncTask inner class
+     inner class MyAsyncTask : AsyncTask<List<Image>, Int, String>() {
 
+         private var result: String = "";
+
+         override fun onPreExecute() {
+             super.onPreExecute()
+             //  progressBar.visibility = View.VISIBLE
+         }
+
+         override fun onProgressUpdate(vararg values: Int?) {
+             super.onProgressUpdate(*values)
+         }
+
+         override fun onPostExecute(result: String?) {
+             super.onPostExecute(result)
+             // progressBar.visibility = View.GONE
+             getFileList(folderName.toString())
+             //set result in textView
+
+             images.clear()
+         }
+
+         override fun doInBackground(vararg params: List<Image>): String? {
+
+             for (imagelist in images) {
+
+                 val newpath = Environment.getExternalStorageDirectory()
+                     .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
+
+                 val encryptByte =
+                     ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
+
+                 val fos = FileOutputStream(newpath + File(imagelist.path).name)
+                 fos.write(encryptByte)
+                 fos.close()
+
+                 val size = Utility.calculateSize(File(imagelist.path).length().toInt() / 1024)
+                 val result = fileDBHelper.insertFile(
+                     FileListModal(
+                         UUID.randomUUID().toString(),
+                         File(imagelist.path).name,
+                         size,
+                         imagelist.path,
+                         newpath + File(imagelist.path).name,
+                         folderName.toString(),
+                         Constant.IMAGE
+                     )
+                 )
+
+                 ImageEncryptDecrypt.delete(this@MainActivity, File(imagelist.path))
+                 //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
+             }
+             return result
+         }
+     }*/
+    inner class MyTask : AsyncTask<String, Int, String>() {
         private var result: String = "";
 
-        override fun onPreExecute() {
-            super.onPreExecute()
-            //  progressBar.visibility = View.VISIBLE
-        }
-
-        override fun onProgressUpdate(vararg values: Int?) {
-            super.onProgressUpdate(*values)
-        }
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            // progressBar.visibility = View.GONE
-            getFileList(folderName.toString())
-            //set result in textView
-
-            images.clear()
-        }
-
-        override fun doInBackground(vararg params: List<Image>): String? {
-
+        override protected fun doInBackground(vararg folderName: String): String {
+            // do something in background
             for (imagelist in images) {
 
+                val folderName1 = folderName.get(0)
                 val newpath = Environment.getExternalStorageDirectory()
-                    .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
+                    .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName1.toString() + "/"
 
                 val encryptByte =
                     ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
@@ -681,66 +789,32 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                         size,
                         imagelist.path,
                         newpath + File(imagelist.path).name,
-                        folderName.toString(),
+                        folderName1,
                         Constant.IMAGE
                     )
                 )
-
+                syncData()
                 ImageEncryptDecrypt.delete(this@MainActivity, File(imagelist.path))
                 //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
             }
             return result
         }
-    }*/
-   inner class MyTask:AsyncTask<String, Int, String>() {
-       private var result: String = "";
 
-       override  protected fun doInBackground(vararg folderName:String):String {
-           // do something in background
-         for (imagelist in images) {
+        override protected fun onPreExecute() {
+            // do something before start
+        }
 
-             val folderName1 = folderName.get(0)
-             val newpath = Environment.getExternalStorageDirectory()
-                 .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName1.toString() + "/"
-
-             val encryptByte =
-                 ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
-
-             val fos = FileOutputStream(newpath + File(imagelist.path).name)
-             fos.write(encryptByte)
-             fos.close()
-
-             val size = Utility.calculateSize(File(imagelist.path).length().toInt() / 1024)
-             val result = fileDBHelper.insertFile(
-                 FileListModal(
-                     UUID.randomUUID().toString(),
-                     File(imagelist.path).name,
-                     size,
-                     imagelist.path,
-                     newpath + File(imagelist.path).name,
-                     folderName1,
-                     Constant.IMAGE
-                 )
-             )
-
-             ImageEncryptDecrypt.delete(this@MainActivity, File(imagelist.path))
-             //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
-         }
-         return result
-       }
-      override protected fun onPreExecute() {
-           // do something before start
-       }
-     fun onProgressUpdate(vararg args:Int) {
+        fun onProgressUpdate(vararg args: Int) {
 
 
-       }
-     override  protected fun onPostExecute(result:String) {
+        }
 
-          super.onPostExecute(result)
-         images.clear()
-         getListOfFolder()
-           // do something after execution
-       }
-   }
+        override protected fun onPostExecute(result: String) {
+
+            super.onPostExecute(result)
+            images.clear()
+            getListOfFolder()
+            // do something after execution
+        }
+    }
 }
