@@ -3,6 +3,7 @@ package com.gallarylock.activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -33,10 +34,18 @@ import com.esafirm.imagepicker.model.Image
 import com.gallarylock.R
 import com.gallarylock.SessionManager
 import com.gallarylock.Utility
+import com.gallarylock.Utility.copyDataBseFromExternal
+import com.gallarylock.Utility.copyDataBseToExternal
 import com.gallarylock.database.FileDBHelper
 import com.gallarylock.database.FolderDBHelper
 import com.gallarylock.modal.FileListModal
 import com.gallarylock.utility.Constant
+import com.gallarylock.utility.Constant.DB_NAME
+import com.gallarylock.utility.Constant.defualtDbFile
+import com.gallarylock.utility.Constant.defualtDbFileShm
+import com.gallarylock.utility.Constant.defualtDbFileWal
+import com.gallarylock.utility.Constant.sdDatabsePath
+import com.gallarylock.utility.Constant.sdbackupDBPath
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar.*
 import vn.tungdx.mediapicker.MediaOptions
@@ -49,7 +58,7 @@ import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
-
+    var progress: ProgressDialog? = null
     private var adapter: FolderListAdapter? = null
 
     lateinit var folderDBHelper: FolderDBHelper
@@ -127,50 +136,83 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
         }
 
         syncDataOnInstall()
+        progress = ProgressDialog(this);
+        progress!!.setTitle("Loading");
+        progress!!.setMessage("Wait while loading...");
+        progress!!.setCancelable(false); // disable dismiss by tapping outside of the dialog
+
     }
 
     private fun syncData() {
-        val folderDirectory = File(
-            Environment.getExternalStorageDirectory()
-                .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse"
+
+        copyDataBseToExternal(
+            defualtDbFile.absolutePath,
+            DB_NAME,
+            sdDatabsePath.absolutePath
         )
-        val currentDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
-        val backupDBPath = File(folderDirectory.absolutePath + "/" + "gallaryloker.db")
-        val data = Environment.getDataDirectory()
-        val currentDB = File(data, currentDBPath)
+
+        if (defualtDbFileShm.exists()) {
             copyDataBseToExternal(
-                currentDB.absolutePath,
-                "gallaryloker.db",
-                folderDirectory.absolutePath
+                defualtDbFileShm.absolutePath,
+                DB_NAME,
+                sdDatabsePath.absolutePath
             )
+        }
+        if (defualtDbFileWal.exists()) {
+            copyDataBseToExternal(
+                defualtDbFileWal.absolutePath,
+                DB_NAME,
+                sdDatabsePath.absolutePath
+            )
+        }
     }
 
     private fun syncDataOnInstall() {
-        val folderDirectory = File(
-            Environment.getExternalStorageDirectory()
-                .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse"
-        )
-        val currentDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
-        val backupDBPath = File(folderDirectory.absolutePath + "/" + "gallaryloker.db")
-        val data = Environment.getDataDirectory()
-        val currentDB = File(data, currentDBPath)
 
 
         Handler().postDelayed(Runnable {
 
-            if (backupDBPath.exists()) {
+            if (sdbackupDBPath.exists()) {
                 // currentDB.mkdir()
                 copyDataBseFromExternal(
-                    backupDBPath.absolutePath,
-                    "gallaryloker.db",
-                    currentDB.absolutePath
+                    sdbackupDBPath.absolutePath,
+                    DB_NAME,
+                    defualtDbFile.absolutePath
                 )
+                if (defualtDbFileShm.exists()) {
+                    copyDataBseFromExternal(
+                        sdbackupDBPath.absolutePath,
+                        DB_NAME,
+                        defualtDbFileShm.absolutePath
+                    )
+                }
+                if (defualtDbFileWal.exists()) {
+                    copyDataBseFromExternal(
+                        sdbackupDBPath.absolutePath,
+                        DB_NAME,
+                        defualtDbFileWal.absolutePath
+                    )
+                }
             } else {
                 copyDataBseToExternal(
-                    currentDB.absolutePath,
-                    "gallaryloker.db",
-                    folderDirectory.absolutePath
+                    defualtDbFile.absolutePath,
+                    DB_NAME,
+                    sdDatabsePath.absolutePath
                 )
+                if (defualtDbFileShm.exists()) {
+                    copyDataBseToExternal(
+                        defualtDbFileShm.absolutePath,
+                        DB_NAME,
+                        sdDatabsePath.absolutePath
+                    )
+                }
+                if (defualtDbFileWal.exists()) {
+                    copyDataBseToExternal(
+                        defualtDbFileWal.absolutePath,
+                        DB_NAME,
+                        sdDatabsePath.absolutePath
+                    )
+                }
             }
             getListOfFolder()
         }, 1000);
@@ -178,72 +220,6 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
 
     }
 
-    private fun copyDataBseFromExternal(inputPath: String, inputFile: String, outputPath: String) {
-        var ins: InputStream? = null
-        var out: OutputStream? = null
-        try {
-            //create output directory if it doesn't exist
-            val dir = File(outputPath)
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
-            ins = FileInputStream(inputPath)
-            out = FileOutputStream(outputPath)
-            val buffer = ByteArray(1024)
-            var length = ins.read(buffer)
-            // read = `in`.read(buffer)
-            while (length > 0) {
-                //out.write(buffer, 0, read)
-                out.write(buffer, 0, length)
-                length = ins.read(buffer)
-            }
-            ins.close()
-
-            // write the output file
-            out.flush()
-            out.close()
-            // delete the original file
-            // File(inputPath + inputFile).delete()
-        } catch (fnfe1: FileNotFoundException) {
-            Log.e("tag", fnfe1.message)
-        } catch (e: Exception) {
-            Log.e("tag", e.message)
-        }
-    }
-
-
-    private fun copyDataBseToExternal(inputPath: String, inputFile: String, outputPath: String) {
-        var ins: InputStream? = null
-        var out: OutputStream? = null
-        try {
-            //create output directory if it doesn't exist
-            val dir = File(outputPath)
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
-            ins = FileInputStream(inputPath)
-            out = FileOutputStream(outputPath + "/" + inputFile)
-            val buffer = ByteArray(1024)
-            var length = ins.read(buffer)
-            // read = `in`.read(buffer)
-            while (length > 0) {
-                //out.write(buffer, 0, read)
-                out.write(buffer, 0, length)
-                length = ins.read(buffer)
-            }
-            ins.close()
-
-            // write the output file
-            out.flush()
-            out.close()
-            // delete the original file
-            // File(inputPath + inputFile).delete()
-        } catch (fnfe1: FileNotFoundException) {
-            Log.e("tag", fnfe1.message)
-        } catch (e: Exception) {
-            Log.e("tag", e.message)
-        }
-    }
 
     override fun onItemSelect(position: Int, data: FolderListModal) {
 
@@ -265,8 +241,8 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                     AskOption(data)
                 }
                 R.id.rename -> {
-                    renameFolder(data)
-                    // Toast.makeText(this@MainActivity, item.title, Toast.LENGTH_SHORT).show();
+                    // renameFolder(data)
+                    Toast.makeText(this@MainActivity, "Coming soon", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -416,73 +392,6 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     }
 
 
-    private fun moveFile(
-        originalpath: String,
-        inputFile: String,
-        newpath: String,
-        folderName: String,
-        type: String
-    ) {
-        /*  if( File(inputPath).renameTo(File(outputPath + inputFile + ".hide")))
-          {
-              File(inputPath).delete()
-
-              adapter?.notifyDataSetChanged()
-          }else{
-              Log.e("notMoved", "error")
-          }*/
-        //  var path: Path = Files.move(Paths.get(inputFile),Paths.get(outputPath + inputFile + ".hide"))
-        var `in`: InputStream? = null
-        var out: OutputStream? = null
-        try {
-            //create output directory if it doesn't exist
-            val dir = File(originalpath)
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
-            `in` = FileInputStream(originalpath)
-            out = FileOutputStream(newpath + inputFile)
-            val buffer = ByteArray(1024)
-            val read: Int
-            var length = `in`.read(buffer)
-            // read = `in`.read(buffer)
-            while (length > 0) {
-                //out.write(buffer, 0, read)
-                out.write(buffer, 0, length)
-                length = `in`.read(buffer)
-            }
-            `in`.close()
-            `in` = null
-            // write the output file
-            out.flush()
-            out.close()
-            out = null
-            adapter?.notifyDataSetChanged()
-            val size = Utility.calculateSize(File(originalpath).length().toInt() / 1024)
-            val result = fileDBHelper.insertFile(
-                FileListModal(
-                    UUID.randomUUID().toString(),
-                    inputFile,
-                    size,
-                    originalpath,
-                    newpath + inputFile,
-                    folderName,
-                    type
-                )
-            )
-            if (result) Log.d("file add===", "yes")
-            if (ImageEncryptDecrypt.delete(this, File(originalpath))) {
-                Log.d("delete", "yes")
-            }
-            // delete the original file
-            //  File(inputPath).delete()
-        } catch (fnfe1: FileNotFoundException) {
-            Log.e("tag", "error")
-        } catch (e: Exception) {
-            Log.e("tag", e.message)
-        }
-    }
-
     @Throws(IOException::class)
 
     //handle result of picked image
@@ -625,8 +534,9 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                             newCategory.toString()
                         )
                         source.renameTo(destination)
-                        getListOfFolder()
                         syncData()
+                        getListOfFolder()
+
                         Log.d("rename===", result.toString())
                     }
                 }
@@ -687,11 +597,20 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
                         )
 
                         if (folderDirectory.exists()) {
+                            if (folderDirectory.isDirectory()) {
+                                val children = folderDirectory.list()
+                                for (i in children.indices) {
+                                    File(folderDirectory, children[i]).delete()
+                                }
+                            }
+
                             folderDirectory.delete()
+                            ImageEncryptDecrypt.delete(this@MainActivity, folderDirectory)
+                            folderDBHelper.deleteFolder(file.id)
+                            syncData()
                         }
 
                     }
-
 
                     getListOfFolder()
                     dialog.dismiss()
@@ -707,66 +626,10 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
     }
 
 
-    /* // AsyncTask inner class
-     inner class MyAsyncTask : AsyncTask<List<Image>, Int, String>() {
-
-         private var result: String = "";
-
-         override fun onPreExecute() {
-             super.onPreExecute()
-             //  progressBar.visibility = View.VISIBLE
-         }
-
-         override fun onProgressUpdate(vararg values: Int?) {
-             super.onProgressUpdate(*values)
-         }
-
-         override fun onPostExecute(result: String?) {
-             super.onPostExecute(result)
-             // progressBar.visibility = View.GONE
-             getFileList(folderName.toString())
-             //set result in textView
-
-             images.clear()
-         }
-
-         override fun doInBackground(vararg params: List<Image>): String? {
-
-             for (imagelist in images) {
-
-                 val newpath = Environment.getExternalStorageDirectory()
-                     .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + folderName.toString() + "/"
-
-                 val encryptByte =
-                     ImageEncryptDecrypt(Constant.MY_PASSWORD).encrypt(File(imagelist.path).readBytes())
-
-                 val fos = FileOutputStream(newpath + File(imagelist.path).name)
-                 fos.write(encryptByte)
-                 fos.close()
-
-                 val size = Utility.calculateSize(File(imagelist.path).length().toInt() / 1024)
-                 val result = fileDBHelper.insertFile(
-                     FileListModal(
-                         UUID.randomUUID().toString(),
-                         File(imagelist.path).name,
-                         size,
-                         imagelist.path,
-                         newpath + File(imagelist.path).name,
-                         folderName.toString(),
-                         Constant.IMAGE
-                     )
-                 )
-
-                 ImageEncryptDecrypt.delete(this@MainActivity, File(imagelist.path))
-                 //moveFile(imagelist.path, fileName, newpath +fileName, folderName.toString(), Constant.IMAGE)
-             }
-             return result
-         }
-     }*/
     inner class MyTask : AsyncTask<String, Int, String>() {
         private var result: String = "";
 
-        override protected fun doInBackground(vararg folderName: String): String {
+        override fun doInBackground(vararg folderName: String): String {
             // do something in background
             for (imagelist in images) {
 
@@ -800,20 +663,19 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             return result
         }
 
-        override protected fun onPreExecute() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+            progress?.show();
             // do something before start
         }
 
-        fun onProgressUpdate(vararg args: Int) {
 
-
-        }
-
-        override protected fun onPostExecute(result: String) {
+        override fun onPostExecute(result: String) {
 
             super.onPostExecute(result)
             images.clear()
             getListOfFolder()
+            progress?.dismiss()
             // do something after execution
         }
     }

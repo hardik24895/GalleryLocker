@@ -74,6 +74,7 @@
             android:textSize="17sp"></TextView>
 
         <LinearLayout
+            android:weightSum="10"
             android:id="@+id/linUnhide"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,19 +83,19 @@
             <TextView
                 android:layout_gravity="center_horizontal"
                 android:id="@+id/tvUnhide"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1">
+                android:layout_weight="9">
 
             </TextView>
 
             <RadioButton
                android:clickable="false"
                 android:id="@+id/rbUnhide"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|end"
-                android:layout_weight="9"
+                android:layout_weight="1"
                 android:gravity="end">
 
             </RadioButton>
