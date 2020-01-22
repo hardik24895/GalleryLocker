@@ -30,7 +30,7 @@ class DialogUnhideOption(context: Context) : BlurDialogFragment(), LifecycleOwne
     companion object {
         private lateinit var listener: OnItemClick
         private var filelist = ArrayList<FileListModal>()
-        private lateinit var foldername : String
+        private lateinit var foldername: String
         fun newInstance(
             context: Context,
             folderlist: ArrayList<FileListModal>,
@@ -71,7 +71,7 @@ class DialogUnhideOption(context: Context) : BlurDialogFragment(), LifecycleOwne
         val adapter = FilePathAdapter(filelist, context!!)
         recyclerView.adapter = adapter
         val unHidePath = Environment.getExternalStorageDirectory()
-            .getAbsolutePath() + "/" + "Gallary Locker" + "/" + "Unhide" + "/"  + foldername + "/"
+            .getAbsolutePath() + "/" + "DCIM" + "/" + "Gallery Locker" + "/" + foldername + "/"
 
         tvUnhide.text = unHidePath
         linOriginal.setOnClickListener {
@@ -83,7 +83,10 @@ class DialogUnhideOption(context: Context) : BlurDialogFragment(), LifecycleOwne
             rbUnhide.isChecked = true
         }
         btnUnhide.setOnClickListener {
-            if (rbOriginal.isChecked) listener.onItemCLicked(Constant.ORIGINAL, filelist) else listener.onItemCLicked(
+            if (rbOriginal.isChecked) listener.onItemCLicked(
+                Constant.ORIGINAL,
+                filelist
+            ) else listener.onItemCLicked(
                 Constant.UNHIDE, filelist
             )
             dismissAllowingStateLoss()
@@ -95,7 +98,7 @@ class DialogUnhideOption(context: Context) : BlurDialogFragment(), LifecycleOwne
     }
 
     interface OnItemClick {
-        fun onItemCLicked(text:String,fileList: ArrayList<FileListModal>)
+        fun onItemCLicked(text: String, fileList: ArrayList<FileListModal>)
     }
 
     class FilePathAdapter(var folderList: ArrayList<FileListModal>, val context: Context) :

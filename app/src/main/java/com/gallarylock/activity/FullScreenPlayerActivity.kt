@@ -6,6 +6,8 @@ import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -13,21 +15,27 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.gallarylock.R
 import com.gallarylock.utility.Constant
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ads.AdsMediaSource.MediaSourceFactory
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.ui.PlayerControlView
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.ByteArrayDataSource
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.toolbar_title.*
+import java.io.File
+import java.io.FileOutputStream
+import java.util.*
 
 class FullScreenPlayerActivity : AppCompatActivity(),
     MediaSourceFactory {
@@ -47,7 +55,7 @@ class FullScreenPlayerActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-        setUpToolbarWithBackArrow("Player",true)
+        setUpToolbarWithBackArrow("Player", true)
         dataSourceFactory = DefaultDataSourceFactory(
             this,
             Util.getUserAgent(
@@ -68,9 +76,10 @@ class FullScreenPlayerActivity : AppCompatActivity(),
         outState.putBoolean(STATE_PLAYER_FULLSCREEN, mExoPlayerFullscreen)
         super.onSaveInstanceState(outState)
     }
+
     fun setUpToolbarWithBackArrow(strTitle: String? = null, isBackArrow: Boolean = true) {
         setSupportActionBar(toolbar2)
-        toolbar2.setNavigationOnClickListener{
+        toolbar2.setNavigationOnClickListener {
             finish()
         }
         val actionBar = supportActionBar
@@ -81,6 +90,7 @@ class FullScreenPlayerActivity : AppCompatActivity(),
             if (strTitle != null) txtTitle?.text = strTitle
         }
     }
+
     private fun initFullscreenDialog() {
         mFullScreenDialog =
             object : Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
@@ -147,12 +157,27 @@ class FullScreenPlayerActivity : AppCompatActivity(),
             player?.seekTo(mResumeWindow, mResumePosition)
         }
         val uri = intent.getStringExtra(Constant.DATA)
-         //  mVideoSource =  ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(uri));
 
-            mVideoSource = createMediaSource(Uri.parse(uri))
+        val encryptedData = File(uri).readBytes()
+        // val decryptedData: ByteArray = EncriptDycript.decrypt(encryptedData,Constant.secretKey)
+        val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+
+
+        //  mVideoSource =  ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(uri));
+        val newpath = Environment.getExternalStorageDirectory()
+            .getAbsolutePath() + "/" + Constant.APPLICATON_FOLDER_NAME + "/" + "test"
+
+        val fos = FileOutputStream(newpath)
+        fos.write(decryptedData)
+        fos.close()
+        mVideoSource = createMediaSource(File(newpath).toUri())
         Log.i("DEBUG", " mVideoSource $mVideoSource")
         player?.prepare(mVideoSource)
         player?.setPlayWhenReady(true)
+        Handler().postDelayed(Runnable {
+            File(newpath).delete()
+        }, 500)
+
     }
 
     override fun onResume() {
@@ -183,7 +208,6 @@ class FullScreenPlayerActivity : AppCompatActivity(),
     }
 
 
-
     override fun onPause() {
         super.onPause()
         if (playerView != null && player != null) {
@@ -195,14 +219,26 @@ class FullScreenPlayerActivity : AppCompatActivity(),
     }
 
 
-
     override fun getSupportedTypes(): IntArray {
         return intArrayOf(C.TYPE_DASH, C.TYPE_HLS, C.TYPE_OTHER)
     }
 
     override fun createMediaSource(uri: Uri): MediaSource {
-       return ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri)
+        return ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri)
     }
+
+    /*  private fun createMediaSourceByteArray(data:ByteArray):MediaSource {
+          val byteArrayDataSource = ByteArrayDataSource(data)
+          val factory = object: DataSource.Factory {
+              override fun createDataSource():DataSource {
+                  return byteArrayDataSource
+              }
+          }
+          val mediaSource = ExtractorMediaSource.Factory(factory)
+              .setExtractorsFactory(DefaultExtractorsFactory())
+              .createMediaSource(Uri.EMPTY)
+          return Objects.requireNonNull(mediaSource, "MediaSource cannot be null")
+      }*/
     private fun hideNavigationBar() {
         val currentApiVersion = Build.VERSION.SDK_INT
 
@@ -228,6 +264,7 @@ class FullScreenPlayerActivity : AppCompatActivity(),
         }
 
     }
+
     @SuppressLint("NewApi")
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)

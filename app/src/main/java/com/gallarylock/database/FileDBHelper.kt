@@ -173,7 +173,7 @@ class FileDBHelper (context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
     companion object {
         // If you change the database schema, you must increment the database version.
         val DATABASE_VERSION = 1
-        val DATABASE_NAME = "gallaryloker.db"
+        val DATABASE_NAME = "galleryloker.db"
 
         private val SQL_CREATE_ENTRIES =
             "CREATE TABLE " + DBFiles.FileEntry.TABLE_NAME + " (" +

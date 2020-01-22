@@ -18,6 +18,8 @@
         android:requestLegacyExternalStorage="true"
         android:theme="@style/AppTheme">
         <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
             android:name="com.gallarylock.activity.SplashActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
@@ -26,33 +28,53 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.gallarylock.activity.MainActivity"
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.MainActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait">
         </activity>
-        <activity android:name="com.gallarylock.activity.SetPinActivity"
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.SetPinActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateVisible"
             android:screenOrientation="portrait">
         </activity>
-        <activity android:name="com.gallarylock.activity.FolderDetailActivity"
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.FolderDetailActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait">
         </activity>
-        <activity android:name="com.gallarylock.activity.LoginActivity"
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.LoginActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateAlwaysVisible"
             android:screenOrientation="portrait">
         </activity>
-        <activity android:name="com.gallarylock.activity.FullScreenPlayerActivity"
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.FullScreenPlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
-        <activity android:name=".activity.FullscreenImageActivity"
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name=".activity.FullscreenImageActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait"/>
         <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
             android:name="vn.tungdx.mediapicker.activities.MediaPickerActivity"
             android:theme="@style/MediaPickerTheme" />
     </application>

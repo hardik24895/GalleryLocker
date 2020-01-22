@@ -4,11 +4,14 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObservable;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Base64;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -201,4 +204,11 @@ public class ImageEncryptDecrypt {
             }
         }
     }*/
+  public static String encodeFromString(Bitmap bm){
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      bm.compress(Bitmap.CompressFormat.PNG, 100, baos); //bm is the bitmap object
+      byte[] b = baos.toByteArray();
+
+      return Base64.encodeToString(b, Base64.DEFAULT);
+  }
 }

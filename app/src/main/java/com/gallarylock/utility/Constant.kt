@@ -42,19 +42,19 @@ object Constant {
 
     const val MY_MAIL = "kanzariyahardikkumar@gmail.com"
     const val MY_PASSWORD = "Kanzariya24895"
-    const val APPLICATON_FOLDER_NAME = ".Gallary Locker";
+    const val APPLICATON_FOLDER_NAME = ".Gallery Locker";
 
 
-   const val defualtDBPath = "//data//com.gallarylock//databases//gallaryloker.db"
-    const val defualtDBPathShm = "//data//com.gallarylock//databases//gallaryloker.db-shm"
-    const val defualtDBPathWal = "//data//com.gallarylock//databases//gallaryloker.db-wal"
-   const val DB_NAME="gallaryloker.db"
+   const val defualtDBPath = "//data//com.gallarylock//databases//galleryloker.db"
+    const val defualtDBPathShm = "//data//com.gallarylock//databases//galleryloker.db-shm"
+    const val defualtDBPathWal = "//data//com.gallarylock//databases//galleryloker.db-wal"
+   const val DB_NAME="galleryloker.db"
     val sdDatabsePath = File(
         Environment.getExternalStorageDirectory()
             .getAbsolutePath() + "/" + APPLICATON_FOLDER_NAME + "/" + "Databse"
     )
 
-    val sdbackupDBPath = File(sdDatabsePath.absolutePath + "/" + "gallaryloker.db")
+    val sdbackupDBPath = File(sdDatabsePath.absolutePath + "/" + "galleryloker.db")
     val data = Environment.getDataDirectory()
     val defualtDbFile = File(data, defualtDBPath)
     val defualtDbFileShm = File(data, defualtDBPathShm)

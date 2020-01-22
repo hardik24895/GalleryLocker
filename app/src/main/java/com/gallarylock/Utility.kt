@@ -1,7 +1,11 @@
 package com.gallarylock
 
+import android.app.Activity
 import android.content.Context
+import android.database.Cursor
+import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import com.gallarylock.activity.ImageEncryptDecrypt
@@ -11,6 +15,11 @@ import java.text.DecimalFormat
 
 
 object Utility {
+    var thumbColumns =
+        arrayOf(MediaStore.Video.Thumbnails.DATA)
+    var mediaColumns =
+        arrayOf(MediaStore.Video.Media._ID)
+
     fun Context.showToast(msg: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(this, msg, duration).show()
     }
