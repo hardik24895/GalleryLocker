@@ -175,6 +175,30 @@ public class ImageEncryptDecrypt {
 
         Uri result = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, image);
     }
+
+    public static void insertVideoFile(final Context context, final File imageFile) {
+        ContentValues video = new ContentValues();
+
+        video.put(MediaStore.Video.Media.TITLE, imageFile.getName());
+        video.put(MediaStore.Video.Media.DISPLAY_NAME, imageFile.getName());
+        video.put(MediaStore.Video.Media.DESCRIPTION, imageFile.getName());
+        video.put(MediaStore.Video.Media.DATE_ADDED, imageFile.lastModified());
+        video.put(MediaStore.Video.Media.DATE_TAKEN, imageFile.lastModified());
+        video.put(MediaStore.Video.Media.DATE_MODIFIED, imageFile.lastModified());
+        video.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+        video.put(MediaStore.Video.Media.ORIENTATION, 0);
+
+        File parent = imageFile.getParentFile();
+        String path = parent.toString().toLowerCase();
+        String name = parent.getName().toLowerCase();
+        video.put(MediaStore.Video.VideoColumns.BUCKET_ID, path.hashCode());
+        video.put(MediaStore.Video.VideoColumns.BUCKET_DISPLAY_NAME, name);
+        video.put(MediaStore.Video.Media.SIZE, imageFile.length());
+
+        video.put(MediaStore.Video.Media.DATA, imageFile.getAbsolutePath());
+
+        Uri result = context.getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, video);
+    }
   /*public static   void savefile(File sourceuri, String Destination)
     {
         String sourceFilename= sourceuri.getPath();

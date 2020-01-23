@@ -1,14 +1,10 @@
 package com.gallarylock.activity
 
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
 import android.os.AsyncTask
 import android.os.Bundle
@@ -20,14 +16,11 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
-import android.view.animation.DecelerateInterpolator
 import android.widget.EditText
-import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.contestee.extention.invisible
@@ -39,7 +32,6 @@ import com.gallarylock.Utility
 import com.gallarylock.Utility.copyDataBseToExternal
 import com.gallarylock.adapter.FileListAdapter
 import com.gallarylock.database.FileDBHelper
-import com.gallarylock.dialog.DialogFolderSelection
 import com.gallarylock.dialog.DialogUnhideOption
 import com.gallarylock.modal.FileListModal
 import com.gallarylock.utility.AlertDialogHelper
@@ -52,7 +44,6 @@ import com.gallarylock.utility.Constant.defualtDbFileShm
 import com.gallarylock.utility.Constant.defualtDbFileWal
 
 import com.gallarylock.utility.Constant.sdDatabsePath
-import com.gallarylock.utility.RecyclerItemClickListener
 import kotlinx.android.synthetic.main.activity_folder_detail.*
 import kotlinx.android.synthetic.main.toolbar_title.*
 import vn.tungdx.mediapicker.MediaItem
@@ -109,7 +100,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
         fab1.setOnClickListener {
             val builder = MediaOptions.Builder()
             var options: MediaOptions? = null
-            options = builder.selectVideo().canSelectMultiVideo(false).build()
+            options = builder.selectVideo().canSelectMultiVideo(true).build()
             MediaPickerActivity.open(
                 this,
                 VIDEO_PICK_CODE,
@@ -330,7 +321,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                         if (text.equals(Constant.ORIGINAL)) {
                             for (i in files.indices) {
                                 val result = fileDBHelper.deleteFile(files[i].id)
-                                savefile(File(files[i].newpath), files[i].originalpath)
+                                savefile(File(files[i].newpath), files[i].originalpath, files[i].filetype)
 
                             }
 
@@ -341,7 +332,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
 
                                 val result = fileDBHelper.deleteFile(files[i].id)
-                                savefile(File(files[i].newpath), unhidepath)
+                                savefile(File(files[i].newpath), unhidepath, files[i].filetype)
                             }
 
                         }
@@ -437,7 +428,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 R.id.unhide -> {
                     //savefile(Uri.fromFile(File(data.newpath)),data.originalpath, data.newpath,data.id)
 
-                    unHideFile(data.originalpath, data.newpath, data.id, data.name)
+                    unHideFile(data.originalpath, data.newpath, data.id, data.name, data.filetype)
                     // Toast.makeText(this, item.title, Toast.LENGTH_SHORT).show();
 
 
@@ -451,7 +442,8 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
     }
 
 
-    private fun unHideFile(originalpath: String, newpath: String, id: String, fileName: String) {
+    private fun unHideFile(originalpath: String, newpath: String, id: String, fileName: String, filetype:String) {
+
 
         var pathList = ArrayList<FileListModal>()
         pathList.add(
@@ -488,9 +480,9 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                         val result = fileDBHelper.deleteFile(id)
                         getFileList(folderName.toString())
                         if (text.equals(Constant.ORIGINAL)) {
-                            savefile(File(newpath), originalpath)
+                            savefile(File(newpath), originalpath, filetype )
                         } else {
-                            savefile(File(newpath), unhidepath)
+                            savefile(File(newpath), unhidepath, filetype)
                         }
 
                     }
@@ -500,7 +492,7 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
 
     }
 
-    fun savefile(sourceuri: File, Destination: String) {
+    fun savefile(sourceuri: File, Destination: String, filetype: String) {
         var bis: BufferedInputStream? = null
         var bos: BufferedOutputStream? = null
         val encryptedData = sourceuri.readBytes()
@@ -526,7 +518,12 @@ class FolderDetailActivity : AppCompatActivity(), FileListAdapter.OnItemSelected
                 e.printStackTrace()
             }
         }
-        ImageEncryptDecrypt.insertFile(this, File(Destination))
+        if(filetype.equals(Constant.IMAGE)){
+            ImageEncryptDecrypt.insertFile(this, File(Destination))
+        }else{
+            ImageEncryptDecrypt.insertVideoFile(this, File(Destination))
+        }
+
         sourceuri.delete()
         ImageEncryptDecrypt.delete(this, sourceuri)
     }

@@ -16,6 +16,8 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.contestee.extention.invisible
+import com.contestee.extention.visible
 import com.gallarylock.R
 import com.gallarylock.activity.ImageEncryptDecrypt
 import com.gallarylock.modal.FileListModal
@@ -81,8 +83,7 @@ class FileListAdapter(
             // if(file.filetype.equals(Constant.VIDEO))  imgplay.visible()
             textViewName.text = file.name
             txtSize.text = "Size: " + file.size
-            val encryptedData = File(file.newpath).readBytes()
-            val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+
             if (folderSelectedList.contains(folderList.get(position)))
                 cardview.setBackgroundColor(
                     ContextCompat.getColor(context, R.color.list_item_selected_state)
@@ -95,12 +96,15 @@ class FileListAdapter(
                 )
 
             if (file.filetype.equals(Constant.IMAGE)) {
+                val encryptedData = File(file.newpath).readBytes()
+                val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
+                imgplay.invisible()
                 Glide.with(context)
                     .load(decryptedData)
                     .asBitmap()
                     .into(imageview)
             } else {
-
+                imgplay.visible()
                 var decodedString = Base64.decode(file.filetype, Base64.DEFAULT)
                 var decodedByte =
                     BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
