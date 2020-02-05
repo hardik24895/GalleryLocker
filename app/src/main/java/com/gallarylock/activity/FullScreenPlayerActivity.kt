@@ -52,6 +52,7 @@ class FullScreenPlayerActivity : AppCompatActivity(),
     private var player: SimpleExoPlayer? = null
     private var mResumeWindow = 0
     private var mResumePosition: Long = 0
+    private var newpath : String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
@@ -80,6 +81,10 @@ class FullScreenPlayerActivity : AppCompatActivity(),
     fun setUpToolbarWithBackArrow(strTitle: String? = null, isBackArrow: Boolean = true) {
         setSupportActionBar(toolbar2)
         toolbar2.setNavigationOnClickListener {
+
+                File(newpath).delete()
+
+
             finish()
         }
         val actionBar = supportActionBar
@@ -164,7 +169,7 @@ class FullScreenPlayerActivity : AppCompatActivity(),
 
 
         //  mVideoSource =  ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(uri));
-        val newpath = Environment.getExternalStorageDirectory()
+         newpath = Environment.getExternalStorageDirectory()
             .getAbsolutePath() + "/" + Constant.APPLICATON_FOLDER_NAME + "/" + "test"
 
         val fos = FileOutputStream(newpath)
@@ -174,12 +179,13 @@ class FullScreenPlayerActivity : AppCompatActivity(),
         Log.i("DEBUG", " mVideoSource $mVideoSource")
         player?.prepare(mVideoSource)
         player?.setPlayWhenReady(true)
-        Handler().postDelayed(Runnable {
-            File(newpath).delete()
-        }, 500)
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        File(newpath).delete()
+    }
     override fun onResume() {
         super.onResume()
         if (playerView == null) {

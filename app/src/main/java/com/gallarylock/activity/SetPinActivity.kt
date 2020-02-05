@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Patterns
 import androidx.appcompat.app.AppCompatActivity
 import com.contestee.extention.getValue
 import com.contestee.extention.isEmpty
@@ -52,19 +53,25 @@ class SetPinActivity : AppCompatActivity() {
 
 
     private  fun validation(){
-        var emailPattern : String = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+"
         if(editpin.isEmpty()|| editpin.getValue().length!=4){
             root.showSnackBar("Please enter minimum 4 digit pin")
         }else if(edtconfimpin.isEmpty()|| edtconfimpin.getValue()!=editpin.getValue()){
             root.showSnackBar("Pin Does Not Match")
-        }else if(android.util.Patterns.EMAIL_ADDRESS.matcher(emailPattern).matches() && edtemail.getValue().length>0 )
+        } else if (edtemail.text.toString().trim { it <= ' ' }.isEmpty()) {
+           // etEmail.error = context.getString(R.string.validation_input_email)
+           // etEmail.requestFocus()
+            root.showSnackBar("Email address is not valid")
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(edtemail.text.toString().trim { it <= ' ' }).matches()) {
+           // etEmail.error = context.getString(R.string.validation_input_email)
+            //etEmail.requestFocus()
+            root.showSnackBar("Email address is not valid")
+        }
+
+      /*  else if(!android.util.Patterns.EMAIL_ADDRESS.matcher(emailPattern).matches() || edtemail.getValue().length>0 )
         {
-            sessionManager.isLoggedIn = true
-            sessionManager.storeDataByKey(Constant.PIN,editpin.getValue())
-            sessionManager.storeDataByKey(Constant.EMAIL,edtemail.getValue())
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        }else{
+            root.showSnackBar("Email address is not valid")
+
+        }*/else{
             sessionManager.isLoggedIn = true
             sessionManager.storeDataByKey(Constant.PIN,editpin.getValue())
             sessionManager.storeDataByKey(Constant.EMAIL,edtemail.getValue())

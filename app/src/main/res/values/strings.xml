@@ -13,4 +13,6 @@
     <string name="dcim_gallerylocker_unhide">DCIM/Gallery Locker/Unhide</string>
     <string name="app_settings">App Settings</string>
     <string name="permission_required">Permission Required</string>
+    <string name="validation_input_email">Email address is not valid</string>
+    <string name="success">Success</string>
 </resources>

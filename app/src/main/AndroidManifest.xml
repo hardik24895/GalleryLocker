@@ -53,6 +53,20 @@
         <activity
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.SettingActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:name="com.gallarylock.activity.ChangePinActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
             android:name="com.gallarylock.activity.LoginActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateAlwaysVisible"

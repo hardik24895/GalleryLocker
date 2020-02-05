@@ -12,12 +12,17 @@ import com.contestee.extention.*
 import com.gallarylock.R
 import com.gallarylock.SessionManager
 import com.gallarylock.Utility.showToast
+import com.gallarylock.dialog.ForgotPasswordDialog
 import com.gallarylock.utility.Constant
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.toolbar_title.*
 
-import java.io.File
+import java.io.*
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 import java.util.*
+import javax.net.ssl.HttpsURLConnection
 
 
 class LoginActivity : AppCompatActivity() {
@@ -28,7 +33,15 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         session = SessionManager(this)
         setContentView(R.layout.activity_login)
-        txtTitle.text ="Login"
+        txtTitle.text = "Login"
+        txtForgot.setOnClickListener {
+            object : ForgotPasswordDialog(this) {
+                override fun onEmailSent() {
+
+                }
+            }.show()
+        }
+
         txtOK.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(
@@ -38,28 +51,29 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 validation()
             }
-           }
+        }
     }
-    private  fun validation(){
+
+    private fun validation() {
         val folderDirectory = File(
-            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constant.APPLICATON_FOLDER_NAME +"/" +"Pin" +"/"+ "login"
+            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constant.APPLICATON_FOLDER_NAME + "/" + "Pin" + "/" + "login"
         )
         val encryptedData = folderDirectory.readBytes()
         val decryptedData = ImageEncryptDecrypt(Constant.MY_PASSWORD).decrypt(encryptedData)
         val key: String = String(decryptedData)
-        Log.e("password",key)
-        val s =session.getDataByKey(Constant.PIN)
-        Log.e("session",s)
-        if(edtpin.isEmpty()){
+        Log.e("password", key)
+        session.storeDataByKey(Constant.PIN, key)
+        if (edtpin.isEmpty()) {
             root.showSnackBar("Please enter valid pin")
-        }else if(!key.equals(edtpin.getValue()) ){
-           txtPin.visible()
-        }else{
+        } else if (!key.equals(edtpin.getValue())) {
+            txtPin.visible()
+        } else {
             txtPin.invisible()
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
     }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -69,10 +83,12 @@ class LoginActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_REQUEST && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             validation()
             //getListOfFolder()
+
         } else {
 
             showToast("Permission denied!")
         }
     }
+
 
 }

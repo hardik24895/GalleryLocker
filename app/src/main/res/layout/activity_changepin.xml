@@ -22,26 +22,21 @@
         android:gravity="center"
         android:orientation="vertical">
 
-       <!-- <ImageView
-            android:layout_marginBottom="20dp"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@mipmap/ic_launcher"></ImageView>
--->
+
         <com.google.android.material.textfield.TextInputLayout
 
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="Enter Your Pin">
+            android:hint="Enter Current Pin">
 
             <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/edtpin"
+                android:id="@+id/edtcurrentPin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/edittext_back"
                 android:inputType="numberPassword"
                 android:maxLength="4"
@@ -50,17 +45,47 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-
-        <TextView
-            android:id="@+id/txtPin"
-            android:layout_width="wrap_content"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/email_holder"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="Wrong Pin"
-            android:textColor="@android:color/holo_red_dark"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:visibility="gone"></TextView>
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
+            android:hint="Enter New Pin">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/editpin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/edittext_back"
+                android:inputType="numberPassword"
+                android:maxLength="4"
+                android:padding="10dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Confirm Your Pin">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/edtconfimpin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/edittext_back"
+                android:inputType="numberPassword"
+                android:maxLength="4"
+
+                android:padding="10dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <TextView
@@ -77,17 +102,6 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"></TextView>
-        <TextView
-            android:id="@+id/txtForgot"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:layout_marginTop="20dp"
-            android:text="Forgot Pin?"
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:visibility="visible"></TextView>
 
 
     </LinearLayout>

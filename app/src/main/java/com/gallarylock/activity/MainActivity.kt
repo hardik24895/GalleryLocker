@@ -138,6 +138,9 @@ class MainActivity : AppCompatActivity(), FolderListAdapter.OnItemSelected {
             createNewFolder()
         }
 
+        imagSetting.setOnClickListener {
+            startActivity(Intent(this, SettingActivity::class.java))
+        }
         syncDataOnInstall()
         progress = ProgressDialog(this);
         progress!!.setTitle("Loading");
