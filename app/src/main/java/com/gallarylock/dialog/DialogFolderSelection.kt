@@ -71,9 +71,6 @@ class DialogFolderSelection  (context: Context) : BlurDialogFragment(), Lifecycl
             dismissAllowingStateLoss()
         }
     }
-
-
-
     interface OnItemClick {
         fun onItemCLicked(text: RadioButton)
     }
