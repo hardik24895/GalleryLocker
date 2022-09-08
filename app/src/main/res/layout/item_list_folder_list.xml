@@ -30,9 +30,10 @@
         <TextView
             android:layout_marginStart="5dp"
             android:id="@+id/txtName"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/txtCount"
             app:layout_constraintStart_toEndOf="@+id/imageView"
             app:layout_constraintTop_toTopOf="parent"
@@ -51,7 +52,7 @@
 
         <ImageView
             android:layout_margin="5dp"
-            android:id="@+id/imageView2"
+            android:id="@+id/imgOption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"

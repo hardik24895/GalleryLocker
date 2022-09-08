@@ -11,6 +11,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layoutAnimation="@anim/layout_animation_slide_right"
         android:id="@+id/recyclerView"/>
         <LinearLayout
             android:layout_width="match_parent"
@@ -47,5 +48,16 @@
                 android:layout_margin="@dimen/fab_margin"
                 app:srcCompat="@drawable/ic_add_black_24dp" />
         </LinearLayout>
+
+      <!--  <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:visibility="visible"
+            android:layout_gravity="center"
+           />-->
     </FrameLayout>
 </LinearLayout>

@@ -3,4 +3,12 @@
     <dimen name="standard_55">15dp</dimen>
     <dimen name="standard_105">20dp</dimen>
     <dimen name="standard_155">155dp</dimen>
+    <dimen name="textT">13sp</dimen>
+    <dimen name="textS">15sp</dimen>
+    <dimen name="textR">16sp</dimen>
+    <dimen name="textM">18sp</dimen>
+    <dimen name="textL">18sp</dimen>
+    <dimen name="textXL">20sp</dimen>
+    <dimen name="textXXL">24sp</dimen>
+    <dimen name="textXXXL">30sp</dimen>
 </resources>

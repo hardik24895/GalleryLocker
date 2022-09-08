@@ -26,7 +26,9 @@
                 android:textStyle="bold"></TextView>
 
             <RadioGroup
-                android:layout_margin="20dp"
+                android:layout_marginBottom="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginStart="20dp"
                 android:id="@+id/radio_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -42,6 +44,9 @@
                 android:gravity="center"
                 android:orientation="horizontal">
                 <Button
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/btn_background"
                     android:id="@+id/btncancel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -49,11 +54,15 @@
 
                 </Button>
                 <Button
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/btn_background"
                     android:id="@+id/btnok"
                     android:layout_marginStart="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="OK"
+                    android:textColor="@color/colorPrimary"
                     android:layout_marginLeft="10dp">
 
                 </Button>
