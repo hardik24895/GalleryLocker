@@ -1,2 +1,2 @@
 # GalleryLocker
-Lock your personal pgotos and videos
+Lock your personal photos and videos using AES-256 Algorithm 
